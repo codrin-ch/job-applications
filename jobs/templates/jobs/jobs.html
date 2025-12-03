@@ -103,6 +103,18 @@
             /* Green */
         }
 
+        .source-linkedin {
+            background-color: #0077b5;
+        }
+
+        .source-careers-website {
+            background-color: #6f42c1;
+        }
+
+        .source-other {
+            background-color: #6c757d;
+        }
+
         /* Modal styles */
         .modal {
             display: none; 
@@ -186,7 +198,8 @@
                 <th onclick="sortTable(2)">Description</th>
                 <th onclick="sortTable(3)">Resume Version</th>
                 <th onclick="sortTable(4)">Status</th>
-                <th onclick="sortTable(5)">Created At</th>
+                <th onclick="sortTable(5)">Source</th>
+                <th onclick="sortTable(6)">Created At</th>
                 <th>Steps</th>
             </tr>
         </thead>
@@ -212,6 +225,14 @@
                         class="status-select status-{{ job.status|slugify }}">
                         {% for status_code, status_label in status_choices %}
                         <option value="{{ status_code }}" {% if job.status == status_code %}selected{% endif %}>{{ status_label }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select onchange="updateSource(this, '{{ job.id }}')"
+                        class="status-select source-{{ job.source|slugify }}">
+                        {% for source_code, source_label in source_choices %}
+                        <option value="{{ source_code }}" {% if job.source == source_code %}selected{% endif %}>{{ source_label }}</option>
                         {% endfor %}
                     </select>
                 </td>
@@ -397,6 +418,34 @@
                 .catch(error => {
                     console.error('Error:', error);
                     alert('An error occurred while updating status');
+                });
+        }
+
+        function updateSource(selectElement, jobId) {
+            const newSource = selectElement.value;
+            const url = `/update_source/${jobId}/`;
+
+            // Update class for color
+            const classes = selectElement.className.split(' ');
+            const baseClasses = classes.filter(c => !c.startsWith('source-') || c === 'status-select');
+            selectElement.className = baseClasses.join(' ') + ' source-' + slugify(newSource);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ source: newSource })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Failed to update source');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating source');
                 });
         }
 
