@@ -115,6 +115,10 @@
             overflow: auto; 
             background-color: rgba(0,0,0,0.4); 
         }
+        
+        #addStepModal {
+            z-index: 1001; /* Higher than stepsModal */
+        }
 
         .modal-content {
             background-color: #fefefe;
@@ -216,7 +220,7 @@
                     <button class="steps-btn" onclick="openStepsModal('steps-{{ job.id }}')">Show Steps</button>
                     <div id="steps-{{ job.id }}" style="display: none;">
                         <h3>Steps for {{ job.job_title }} at {{ job.company_name }}</h3>
-                        {% if job.steps.all %}
+                        <button class="steps-btn" onclick="openAddStepModal('{{ job.id }}')" style="margin-bottom: 10px;">Add New Step</button>
                         <table class="steps-table">
                             <thead>
                                 <tr>
@@ -225,7 +229,7 @@
                                     <th>Date</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="steps-tbody">
                                 {% for step in job.steps.all %}
                                 <tr>
                                     <td>{{ step.title }}</td>
@@ -235,8 +239,8 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                        {% else %}
-                        <p>No steps recorded for this application.</p>
+                        {% if not job.steps.all %}
+                        <p class="no-steps-msg">No steps recorded for this application.</p>
                         {% endif %}
                     </div>
                 </td>
@@ -255,6 +259,24 @@
         </div>
     </div>
 
+    <!-- Add Step Modal -->
+    <div id="addStepModal" class="modal">
+        <div class="modal-content" style="width: 50%;">
+            <span class="close" onclick="closeAddStepModal()">&times;</span>
+            <h3>Add New Step</h3>
+            <input type="hidden" id="newStepJobId">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Title:</label>
+                <input type="text" id="newStepTitle" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Description:</label>
+                <textarea id="newStepDescription" style="width: 100%; height: 100px; padding: 8px; box-sizing: border-box;"></textarea>
+            </div>
+            <button class="steps-btn" onclick="saveNewStep()">Save</button>
+        </div>
+    </div>
+
     <script>
         function openStepsModal(elementId) {
             const content = document.getElementById(elementId).innerHTML;
@@ -266,11 +288,86 @@
             document.getElementById('stepsModal').style.display = "none";
         }
 
+        function openAddStepModal(jobId) {
+            document.getElementById('newStepJobId').value = jobId;
+            document.getElementById('newStepTitle').value = '';
+            document.getElementById('newStepDescription').value = '';
+            document.getElementById('addStepModal').style.display = "block";
+        }
+
+        function closeAddStepModal() {
+            document.getElementById('addStepModal').style.display = "none";
+        }
+
+        function saveNewStep() {
+            const jobId = document.getElementById('newStepJobId').value;
+            const title = document.getElementById('newStepTitle').value;
+            const description = document.getElementById('newStepDescription').value;
+
+            if (!title || !description) {
+                alert("Please fill in both title and description.");
+                return;
+            }
+
+            fetch(`/add_step/${jobId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ title: title, description: description })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the open modal
+                    const modalBody = document.getElementById('modalBody');
+                    const tbody = modalBody.querySelector('.steps-tbody');
+                    const noStepsMsg = modalBody.querySelector('.no-steps-msg');
+                    
+                    if (noStepsMsg) {
+                        noStepsMsg.style.display = 'none';
+                    }
+
+                    const newRow = `
+                        <tr>
+                            <td>${data.step.title}</td>
+                            <td>${data.step.description}</td>
+                            <td>${data.step.created_at}</td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', newRow);
+
+                    // Update the hidden div for next time
+                    const hiddenDiv = document.getElementById(`steps-${jobId}`);
+                    const hiddenTbody = hiddenDiv.querySelector('.steps-tbody');
+                    const hiddenNoStepsMsg = hiddenDiv.querySelector('.no-steps-msg');
+                    
+                    if (hiddenNoStepsMsg) {
+                        hiddenNoStepsMsg.style.display = 'none';
+                    }
+                    hiddenTbody.insertAdjacentHTML('beforeend', newRow);
+
+                    closeAddStepModal();
+                } else {
+                    alert('Failed to add step: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the step');
+            });
+        }
+
         // Close the modal when clicking outside of it
         window.onclick = function(event) {
-            const modal = document.getElementById('stepsModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
+            const stepsModal = document.getElementById('stepsModal');
+            const addStepModal = document.getElementById('addStepModal');
+            if (event.target == stepsModal) {
+                stepsModal.style.display = "none";
+            }
+            if (event.target == addStepModal) {
+                addStepModal.style.display = "none";
             }
         }
 
