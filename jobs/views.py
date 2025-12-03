@@ -77,3 +77,47 @@ def add_step(request, job_id):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_POST
+def add_job(request):
+    try:
+        data = json.loads(request.body)
+        job_title = data.get('job_title')
+        company_name = data.get('company_name')
+        company_url = data.get('company_url')
+        job_description = data.get('job_description')
+        resume_version = data.get('resume_version')
+        salary = data.get('salary', '')
+        status = data.get('status', 'Applied')
+        source = data.get('source', 'Careers Website')
+
+        if not all([job_title, company_name, company_url, job_description, resume_version]):
+             return JsonResponse({'success': False, 'error': 'All fields except salary are required'}, status=400)
+
+        job = JobApplication.objects.create(
+            job_title=job_title,
+            company_name=company_name,
+            company_url=company_url,
+            job_description=job_description,
+            resume_version=resume_version,
+            salary=salary,
+            status=status,
+            source=source
+        )
+
+        return JsonResponse({
+            'success': True,
+            'job': {
+                'id': job.id,
+                'job_title': job.job_title,
+                'company_name': job.company_name,
+                'company_url': job.company_url,
+                'job_description': job.job_description,
+                'resume_version': job.resume_version,
+                'status': job.status,
+                'source': job.source,
+                'created_at': job.created_at.strftime('%b. %d, %Y, %I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m.') # Match Django default template format roughly
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

@@ -4,115 +4,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jobs List</title>
+    <title>Job Applications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
-            margin: 20px;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .add-job-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .add-job-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
 
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
+        thead tr {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
         }
 
         th {
-            background-color: #f2f2f2;
+            color: white;
+            text-align: left;
+            padding: 20px 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
 
         th:hover {
-            background-color: #e2e2e2;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .description-content {
-            display: inline;
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
         }
 
-        .description-full {
-            display: none;
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
         }
 
-        .read-more {
-            color: blue;
-            cursor: pointer;
+        tbody tr:hover {
+            background-color: #e8f4f8;
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        td {
+            padding: 18px 15px;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+
+        td a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        td a:hover {
+            color: #764ba2;
             text-decoration: underline;
-            font-size: 0.9em;
-            margin-left: 5px;
         }
 
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+        .status-select, .source-select {
+            padding: 8px 12px;
+            border-radius: 20px;
             color: white;
-            font-weight: bold;
-            font-size: 0.9em;
-            display: inline-block;
-            white-space: nowrap;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .status-select:hover, .source-select:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .status-select option, .source-select option {
+            background-color: white;
+            color: #2c3e50;
         }
 
         .status-applied {
-            background-color: #6c757d;
-            /* Grey */
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
         }
 
         .status-rejected {
-            background-color: #dc3545;
-            /* Red */
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
 
         .status-technical-interview {
-            background-color: #ffc107;
-            /* Yellow/Orange */
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: #212529;
-            /* Dark text for better contrast */
         }
 
         .status-hr-interview {
-            background-color: #17a2b8;
-            /* Teal/Cyan */
-        }
-
-        .status-select {
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: white;
-            font-weight: bold;
-            font-size: 0.9em;
-            border: 1px solid #ddd;
-            cursor: pointer;
-        }
-
-        /* Ensure options have dark text so they are readable */
-        .status-select option {
-            background-color: white;
-            color: black;
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
         }
 
         .status-offer {
-            background-color: #28a745;
-            /* Green */
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
         }
 
         .source-linkedin {
-            background-color: #0077b5;
+            background: linear-gradient(135deg, #0077b5 0%, #005885 100%);
         }
 
         .source-careers-website {
-            background-color: #6f42c1;
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
         }
 
         .source-other {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+        }
+
+        .read-more {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.85rem;
+            margin-left: 5px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .read-more:hover {
+            color: #764ba2;
+        }
+
+        .steps-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .steps-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         /* Modal styles */
@@ -125,72 +219,132 @@
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
         }
         
-        #addStepModal {
-            z-index: 1001; /* Higher than stepsModal */
+        #addStepModal, #addJobModal {
+            z-index: 1001;
         }
 
         .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%; 
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: white;
+            margin: 5% auto; 
+            padding: 30px;
+            border: none;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="url"],
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-content input:focus,
+        .modal-content textarea:focus,
+        .modal-content select:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
         .close {
             color: #aaa;
             float: right;
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 300;
+            line-height: 20px;
+            transition: color 0.3s ease;
         }
 
         .close:hover,
         .close:focus {
-            color: black;
+            color: #2c3e50;
             text-decoration: none;
             cursor: pointer;
-        }
-
-        .steps-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        .steps-btn:hover {
-            background-color: #0056b3;
         }
 
         .steps-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         
         .steps-table th, .steps-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
             text-align: left;
         }
         
         .steps-table th {
-            background-color: #f2f2f2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .steps-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .description-short, .description-full {
+            display: inline;
+        }
+
+        .description-full {
+            display: none;
+        }
+
+        .no-steps-msg {
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
-    <h1>Job Applications</h1>
-    <table id="jobsTable">
+    <div class="container">
+        <h1>Job Applications</h1>
+        <button class="add-job-btn" onclick="openAddJobModal()">+ Add Job Application</button>
+        <div class="table-wrapper">
+            <table id="jobsTable">
         <thead>
             <tr>
                 <th onclick="sortTable(0)">Job Title</th>
@@ -269,6 +423,8 @@
             {% endfor %}
         </tbody>
     </table>
+        </div><!-- table-wrapper -->
+    </div><!-- container -->
 
     <!-- The Modal -->
     <div id="stepsModal" class="modal">
@@ -298,6 +454,55 @@
         </div>
     </div>
 
+    <!-- Add Job Modal -->
+    <div id="addJobModal" class="modal">
+        <div class="modal-content" style="width: 50%;">
+            <span class="close" onclick="closeAddJobModal()">&times;</span>
+            <h3>Add New Job Application</h3>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Job Title:</label>
+                <input type="text" id="newJobTitle" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Company Name:</label>
+                <input type="text" id="newCompanyName" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Company URL:</label>
+                <input type="url" id="newCompanyUrl" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Job Description:</label>
+                <textarea id="newJobDescription" style="width: 100%; height: 100px; padding: 8px; box-sizing: border-box;"></textarea>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Resume Version:</label>
+                <input type="text" id="newResumeVersion" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Salary (Optional):</label>
+                <input type="text" id="newSalary" style="width: 100%; padding: 8px; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Status:</label>
+                <select id="newStatus" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                    {% for status_code, status_label in status_choices %}
+                    <option value="{{ status_code }}">{{ status_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">Source:</label>
+                <select id="newSource" style="width: 100%; padding: 8px; box-sizing: border-box;">
+                    {% for source_code, source_label in source_choices %}
+                    <option value="{{ source_code }}" {% if source_code == 'Careers Website' %}selected{% endif %}>{{ source_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="steps-btn" onclick="saveNewJob()">Save Job</button>
+        </div>
+    </div>
+
     <script>
         function openStepsModal(elementId) {
             const content = document.getElementById(elementId).innerHTML;
@@ -318,6 +523,68 @@
 
         function closeAddStepModal() {
             document.getElementById('addStepModal').style.display = "none";
+        }
+
+        function openAddJobModal() {
+            document.getElementById('newJobTitle').value = '';
+            document.getElementById('newCompanyName').value = '';
+            document.getElementById('newCompanyUrl').value = '';
+            document.getElementById('newJobDescription').value = '';
+            document.getElementById('newResumeVersion').value = '';
+            document.getElementById('newSalary').value = '';
+            document.getElementById('newStatus').value = 'Applied';
+            document.getElementById('newSource').value = 'Careers Website';
+            document.getElementById('addJobModal').style.display = "block";
+        }
+
+        function closeAddJobModal() {
+            document.getElementById('addJobModal').style.display = "none";
+        }
+
+        function saveNewJob() {
+            const jobTitle = document.getElementById('newJobTitle').value;
+            const companyName = document.getElementById('newCompanyName').value;
+            const companyUrl = document.getElementById('newCompanyUrl').value;
+            const jobDescription = document.getElementById('newJobDescription').value;
+            const resumeVersion = document.getElementById('newResumeVersion').value;
+            const salary = document.getElementById('newSalary').value;
+            const status = document.getElementById('newStatus').value;
+            const source = document.getElementById('newSource').value;
+
+            if (!jobTitle || !companyName || !companyUrl || !jobDescription || !resumeVersion) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            fetch('/add_job/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    job_title: jobTitle,
+                    company_name: companyName,
+                    company_url: companyUrl,
+                    job_description: jobDescription,
+                    resume_version: resumeVersion,
+                    salary: salary,
+                    status: status,
+                    source: source
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Reload to show the new job
+                } else {
+                    alert('Failed to add job: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the job');
+            });
         }
 
         function saveNewStep() {
@@ -384,11 +651,15 @@
         window.onclick = function(event) {
             const stepsModal = document.getElementById('stepsModal');
             const addStepModal = document.getElementById('addStepModal');
+            const addJobModal = document.getElementById('addJobModal');
             if (event.target == stepsModal) {
                 stepsModal.style.display = "none";
             }
             if (event.target == addStepModal) {
                 addStepModal.style.display = "none";
+            }
+            if (event.target == addJobModal) {
+                addJobModal.style.display = "none";
             }
         }
 
