@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs List</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+
+        th:hover {
+            background-color: #e2e2e2;
+        }
+
+        .description-content {
+            display: inline;
+        }
+
+        .description-full {
+            display: none;
+        }
+
+        .read-more {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-applied {
+            background-color: #6c757d;
+            /* Grey */
+        }
+
+        .status-rejected {
+            background-color: #dc3545;
+            /* Red */
+        }
+
+        .status-technical-interview {
+            background-color: #ffc107;
+            /* Yellow/Orange */
+            color: #212529;
+            /* Dark text for better contrast */
+        }
+
+        .status-hr-interview {
+            background-color: #17a2b8;
+            /* Teal/Cyan */
+        }
+
+        .status-select {
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        /* Ensure options have dark text so they are readable */
+        .status-select option {
+            background-color: white;
+            color: black;
+        }
+
+        .status-offer {
+            background-color: #28a745;
+            /* Green */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Job Applications</h1>
+    <table id="jobsTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Job Title</th>
+                <th onclick="sortTable(1)">Company</th>
+                <th onclick="sortTable(2)">Description</th>
+                <th onclick="sortTable(3)">Resume Version</th>
+                <th onclick="sortTable(4)">Status</th>
+                <th onclick="sortTable(5)">Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.job_title }}</td>
+                <td><a href="{{ job.company_url }}" target="_blank">{{ job.company_name }}</a></td>
+                <td>
+                    <span class="description-short">
+                        {{ job.job_description|slice:":100" }}
+                    </span>
+                    <span class="description-full">
+                        {{ job.job_description }}
+                    </span>
+                    {% if job.job_description|length > 100 %}
+                    <span class="read-more" onclick="toggleDescription(this)">Read more</span>
+                    {% endif %}
+                </td>
+                <td>{{ job.resume_version }}</td>
+                <td>
+                    <select onchange="updateStatus(this, '{{ job.id }}')"
+                        class="status-select status-{{ job.status|slugify }}">
+                        {% for status_code, status_label in status_choices %}
+                        <option value="{{ status_code }}" {% if job.status == status_code %}selected{% endif %}>{{ status_label }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>{{ job.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function updateStatus(selectElement, jobId) {
+            const newStatus = selectElement.value;
+            const url = `/update_status/${jobId}/`;
+
+            // Update class for color
+            // Remove all status classes first
+            const classes = selectElement.className.split(' ');
+            const baseClasses = classes.filter(c => !c.startsWith('status-') || c === 'status-select');
+            selectElement.className = baseClasses.join(' ') + ' status-' + slugify(newStatus);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Failed to update status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating status');
+                });
+        }
+
+        function slugify(text) {
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '-')           // Replace spaces with -
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                .replace(/^-+/, '')             // Trim - from start of text
+                .replace(/-+$/, '');            // Trim - from end of text
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function toggleDescription(element) {
+            const cell = element.parentElement;
+            const shortDesc = cell.querySelector('.description-short');
+            const fullDesc = cell.querySelector('.description-full');
+
+            if (fullDesc.style.display === 'none' || fullDesc.style.display === '') {
+                fullDesc.style.display = 'inline';
+                shortDesc.style.display = 'none';
+                element.textContent = 'Read less';
+            } else {
+                fullDesc.style.display = 'none';
+                shortDesc.style.display = 'inline';
+                element.textContent = 'Read more';
+            }
+        }
+
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("jobsTable");
+            switching = true;
+            // Set the sorting direction to ascending:
+            dir = "asc";
+            /* Make a loop that will continue until
+            no switching has been done: */
+            while (switching) {
+                // Start by saying: no switching is done:
+                switching = false;
+                rows = table.rows;
+                /* Loop through all table rows (except the
+                first, which contains table headers): */
+                for (i = 1; i < (rows.length - 1); i++) {
+                    // Start by saying there should be no switching:
+                    shouldSwitch = false;
+                    /* Get the two elements you want to compare,
+                    one from current row and one from the next: */
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    /* Check if the two rows should switch place,
+                    based on the direction, asc or desc: */
+                    if (dir == "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            // If so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            // If so, mark as a switch and break the loop:
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    /* If a switch has been marked, make the switch
+                    and mark that a switch has been done: */
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    // Each time a switch is done, increase this count by 1:
+                    switchcount++;
+                } else {
+                    /* If no switching has been done AND the direction is "asc",
+                    set the direction to "desc" and run the while loop again. */
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
