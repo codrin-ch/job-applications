@@ -102,6 +102,73 @@
             background-color: #28a745;
             /* Green */
         }
+
+        /* Modal styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .steps-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .steps-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .steps-table th, .steps-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .steps-table th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 
@@ -116,6 +183,7 @@
                 <th onclick="sortTable(3)">Resume Version</th>
                 <th onclick="sortTable(4)">Status</th>
                 <th onclick="sortTable(5)">Created At</th>
+                <th>Steps</th>
             </tr>
         </thead>
         <tbody>
@@ -144,12 +212,68 @@
                     </select>
                 </td>
                 <td>{{ job.created_at }}</td>
+                <td>
+                    <button class="steps-btn" onclick="openStepsModal('steps-{{ job.id }}')">Show Steps</button>
+                    <div id="steps-{{ job.id }}" style="display: none;">
+                        <h3>Steps for {{ job.job_title }} at {{ job.company_name }}</h3>
+                        {% if job.steps.all %}
+                        <table class="steps-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for step in job.steps.all %}
+                                <tr>
+                                    <td>{{ step.title }}</td>
+                                    <td>{{ step.description }}</td>
+                                    <td>{{ step.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p>No steps recorded for this application.</p>
+                        {% endif %}
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
+    <!-- The Modal -->
+    <div id="stepsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeStepsModal()">&times;</span>
+            <div id="modalBody">
+                <!-- Steps content will be populated here -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        function openStepsModal(elementId) {
+            const content = document.getElementById(elementId).innerHTML;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('stepsModal').style.display = "block";
+        }
+
+        function closeStepsModal() {
+            document.getElementById('stepsModal').style.display = "none";
+        }
+
+        // Close the modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('stepsModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
         function updateStatus(selectElement, jobId) {
             const newStatus = selectElement.value;
             const url = `/update_status/${jobId}/`;

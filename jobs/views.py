@@ -11,7 +11,7 @@ def jobs(request):
 
 
 def jobs_list(request):
-    jobs = JobApplication.objects.order_by('-created_at')
+    jobs = JobApplication.objects.order_by('-created_at').prefetch_related('steps')
     return render(request, "jobs/jobs.html", {"jobs": jobs, "status_choices": JobApplication.STATUS_CHOICES})
 
 @require_POST
