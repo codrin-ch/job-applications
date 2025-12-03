@@ -12,7 +12,11 @@ def jobs(request):
 
 def jobs_list(request):
     jobs = JobApplication.objects.order_by('-created_at').prefetch_related('steps')
-    return render(request, "jobs/jobs.html", {"jobs": jobs, "status_choices": JobApplication.STATUS_CHOICES})
+    return render(request, "jobs/jobs.html", {
+        "jobs": jobs, 
+        "status_choices": JobApplication.STATUS_CHOICES,
+        "source_choices": JobApplication.SOURCE_CHOICES
+    })
 
 @require_POST
 def update_job_status(request, job_id):
@@ -29,6 +33,24 @@ def update_job_status(request, job_id):
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_POST
+def update_job_source(request, job_id):
+    try:
+        data = json.loads(request.body)
+        new_source = data.get('source')
+        job = get_object_or_404(JobApplication, pk=job_id)
+        
+        # Check if the new source is a valid choice
+        valid_sources = [choice[0] for choice in JobApplication.SOURCE_CHOICES]
+        if new_source in valid_sources:
+            job.source = new_source
+            job.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid source'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
