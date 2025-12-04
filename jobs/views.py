@@ -11,7 +11,23 @@ def jobs(request):
 
 
 def jobs_list(request):
-    jobs = JobApplication.objects.order_by('-created_at').prefetch_related('steps')
+    from django.db.models import Case, When, IntegerField
+    
+    # Define status priority: Offer=1, Technical Interview=2, HR Interview=3, Applied=4, Ghosted=5, Rejected=6
+    status_order = Case(
+        When(status='Offer', then=1),
+        When(status='Technical Interview', then=2),
+        When(status='HR Interview', then=3),
+        When(status='Applied', then=4),
+        When(status='Ghosted', then=5),
+        When(status='Rejected', then=6),
+        output_field=IntegerField(),
+    )
+    
+    jobs = JobApplication.objects.annotate(
+        status_priority=status_order
+    ).order_by('status_priority', '-created_at').prefetch_related('steps')
+    
     return render(request, "jobs/jobs.html", {
         "jobs": jobs, 
         "status_choices": JobApplication.STATUS_CHOICES,
