@@ -152,6 +152,10 @@
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
         }
 
+        .status-ghosted {
+            background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+        }
+
         .status-technical-interview {
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: #212529;
@@ -331,6 +335,14 @@
             display: none;
         }
 
+        .step-description-short, .step-description-full {
+            display: inline;
+        }
+
+        .step-description-full {
+            display: none;
+        }
+
         .no-steps-msg {
             color: #6c757d;
             font-style: italic;
@@ -408,7 +420,17 @@
                                 {% for step in job.steps.all %}
                                 <tr>
                                     <td>{{ step.title }}</td>
-                                    <td>{{ step.description }}</td>
+                                    <td>
+                                        <span class="step-description-short">
+                                            {{ step.description|slice:":100" }}
+                                        </span>
+                                        <span class="step-description-full">
+                                            {{ step.description }}
+                                        </span>
+                                        {% if step.description|length > 100 %}
+                                        <span class="read-more" onclick="toggleStepDescription(this)">Read more</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ step.created_at }}</td>
                                 </tr>
                                 {% endfor %}
@@ -620,7 +642,15 @@
                     const newRow = `
                         <tr>
                             <td>${data.step.title}</td>
-                            <td>${data.step.description}</td>
+                            <td>
+                                <span class="step-description-short">
+                                    ${data.step.description.substring(0, 100)}
+                                </span>
+                                <span class="step-description-full">
+                                    ${data.step.description}
+                                </span>
+                                ${data.step.description.length > 100 ? '<span class="read-more" onclick="toggleStepDescription(this)">Read more</span>' : ''}
+                            </td>
                             <td>${data.step.created_at}</td>
                         </tr>
                     `;
@@ -682,7 +712,10 @@
                 body: JSON.stringify({ status: newStatus })
             })
                 .then(response => {
-                    if (!response.ok) {
+                    if (response.ok) {
+                        // Reload page to reorder the list based on new status
+                        location.reload();
+                    } else {
                         alert('Failed to update status');
                     }
                 })
@@ -748,6 +781,22 @@
             const cell = element.parentElement;
             const shortDesc = cell.querySelector('.description-short');
             const fullDesc = cell.querySelector('.description-full');
+
+            if (fullDesc.style.display === 'none' || fullDesc.style.display === '') {
+                fullDesc.style.display = 'inline';
+                shortDesc.style.display = 'none';
+                element.textContent = 'Read less';
+            } else {
+                fullDesc.style.display = 'none';
+                shortDesc.style.display = 'inline';
+                element.textContent = 'Read more';
+            }
+        }
+
+        function toggleStepDescription(element) {
+            const cell = element.parentElement;
+            const shortDesc = cell.querySelector('.step-description-short');
+            const fullDesc = cell.querySelector('.step-description-full');
 
             if (fullDesc.style.display === 'none' || fullDesc.style.display === '') {
                 fullDesc.style.display = 'inline';
