@@ -3,6 +3,7 @@ from django.db import models
 STATUS_CHOICES = [
         ('Applied', 'Applied'),
         ('Ghosted', 'Ghosted'),
+        ('Avoid', 'Avoid'),
         ('Rejected', 'Rejected'),
         ('Technical Interview', 'Technical Interview'),
         ('HR Interview', 'HR Interview'),
