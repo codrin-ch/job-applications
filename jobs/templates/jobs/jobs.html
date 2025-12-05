@@ -195,6 +195,44 @@
             color: #764ba2;
         }
 
+        .goal-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            margin-left: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .goal-reached {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .goal-not-reached {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .goal-icon {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .button-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
         .steps-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -354,7 +392,13 @@
 <body>
     <div class="container">
         <h1>Job Applications</h1>
-        <button class="add-job-btn" onclick="openAddJobModal()">+ Add Job Application</button>
+        <div class="button-row">
+            <button class="add-job-btn" onclick="openAddJobModal()">+ Add Job Application</button>
+            <div class="goal-indicator {% if goal_reached %}goal-reached{% else %}goal-not-reached{% endif %}">
+                <span class="goal-icon">{% if goal_reached %}✓{% else %}✗{% endif %}</span>
+                <span>Daily Goal: {{ today_jobs_count }}/{{ daily_goal }}{% if goal_reached %} ✨{% endif %}</span>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table id="jobsTable">
         <thead>
@@ -695,7 +739,7 @@
 
         function updateStatus(selectElement, jobId) {
             const newStatus = selectElement.value;
-            const url = `/update_status/${jobId}/`;
+            const url = `/update_job_field/${jobId}/`;
 
             // Update class for color
             // Remove all status classes first
@@ -704,7 +748,7 @@
             selectElement.className = baseClasses.join(' ') + ' status-' + slugify(newStatus);
 
             fetch(url, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
@@ -727,7 +771,7 @@
 
         function updateSource(selectElement, jobId) {
             const newSource = selectElement.value;
-            const url = `/update_source/${jobId}/`;
+            const url = `/update_job_field/${jobId}/`;
 
             // Update class for color
             const classes = selectElement.className.split(' ');
@@ -735,7 +779,7 @@
             selectElement.className = baseClasses.join(' ') + ' source-' + slugify(newSource);
 
             fetch(url, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
