@@ -252,6 +252,129 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
+        /* Filter Dropdown Styles */
+        .filter-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1rem;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .filter-icon:hover {
+            opacity: 1;
+        }
+
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            min-width: 250px;
+            z-index: 1000;
+            margin-top: 8px;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-dropdown h4 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .filter-option:hover {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding-left: 8px;
+            margin-left: -8px;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-btn-apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn-apply:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-btn-reset {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e0e0e0;
+        }
+
+        .filter-btn-reset:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .status-header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+
         /* Modal styles */
         .modal {
             display: none; 
@@ -460,7 +583,29 @@
             <tr>
                 <th onclick="sortTable(0)">Job Title</th>
                 <th onclick="sortTable(1)">Company</th>
-                <th onclick="sortTable(2)">Status</th>
+                <th>
+                    <div class="status-header-wrapper">
+                        <span onclick="sortTable(2)" style="cursor: pointer;">Status</span>
+                        <div class="filter-wrapper">
+                            <span class="filter-icon" onclick="event.stopPropagation(); toggleFilterDropdown()">🔽</span>
+                            <div id="filterDropdown" class="filter-dropdown">
+                                <h4>Filter by Status</h4>
+                                {% for status_code, status_label in status_choices %}
+                                <div class="filter-option">
+                                    <input type="checkbox" id="filter-{{ status_code|slugify }}" value="{{ status_code }}" 
+                                           {% if status_code != 'Rejected' and status_code != 'Ghosted' %}checked{% endif %}
+                                           onchange="updateFilterState()">
+                                    <label for="filter-{{ status_code|slugify }}">{{ status_label }}</label>
+                                </div>
+                                {% endfor %}
+                                <div class="filter-actions">
+                                    <button class="filter-btn filter-btn-apply" onclick="applyFilter()">Apply Filter</button>
+                                    <button class="filter-btn filter-btn-reset" onclick="resetFilter()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </th>
                 <th onclick="sortTable(3)">Applied At</th>
                 <th>Steps</th>
             </tr>
@@ -482,7 +627,7 @@
                 <td>{{ job.job_title }}</td>
                 <td><a href="{{ job.company_url }}" target="_blank" onclick="event.stopPropagation()">{{ job.company_name }}</a></td>
                 <td onclick="event.stopPropagation()">
-                    <select onchange="updateStatus(this, '{{ job.id }}')"
+                    <select onchange="updateStatus(this, '{{ job.id }}')"status_code
                         class="status-select status-{{ job.status|slugify }}">
                         {% for status_code, status_label in status_choices %}
                         <option value="{{ status_code }}" {% if job.status == status_code %}selected{% endif %}>{{ status_label }}</option>
@@ -663,6 +808,84 @@
     </div>
 
     <script>
+        // Filter functionality
+        let activeFilters = new Set();
+        
+        // Initialize filters on page load (all except Rejected)
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    activeFilters.add(checkbox.value);
+                }
+            });
+            applyFilterToTable();
+        });
+
+        function toggleFilterDropdown() {
+            const dropdown = document.getElementById('filterDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function updateFilterState() {
+            // This is called when checkboxes change, but we don't apply until "Apply Filter" is clicked
+        }
+
+        function applyFilter() {
+            // Get all checked checkboxes
+            activeFilters.clear();
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    activeFilters.add(checkbox.value);
+                }
+            });
+            
+            applyFilterToTable();
+            toggleFilterDropdown();
+        }
+
+        function applyFilterToTable() {
+            const rows = document.querySelectorAll('#jobsTable tbody tr');
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                if (activeFilters.has(status)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function resetFilter() {
+            // Check all checkboxes except Rejected
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            activeFilters.clear();
+            checkboxes.forEach(checkbox => {
+                if (!['Rejected', 'Ghosted'].includes(checkbox.value)) {
+                    checkbox.checked = true;
+                    activeFilters.add(checkbox.value);
+                } else {
+                    checkbox.checked = false;
+                }
+            });
+            
+            applyFilterToTable();
+            toggleFilterDropdown();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const filterWrapper = document.querySelector('.filter-wrapper');
+            const dropdown = document.getElementById('filterDropdown');
+            
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!filterWrapper.contains(event.target)) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
         function openStepsModal(elementId) {
             const content = document.getElementById(elementId).innerHTML;
             document.getElementById('modalBody').innerHTML = content;
