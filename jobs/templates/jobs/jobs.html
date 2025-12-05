@@ -91,6 +91,7 @@
         tbody tr {
             border-bottom: 1px solid #f0f0f0;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         tbody tr:nth-child(even) {
@@ -251,6 +252,129 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
+        /* Filter Dropdown Styles */
+        .filter-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1rem;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .filter-icon:hover {
+            opacity: 1;
+        }
+
+        .filter-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            min-width: 250px;
+            z-index: 1000;
+            margin-top: 8px;
+        }
+
+        .filter-dropdown.show {
+            display: block;
+        }
+
+        .filter-dropdown h4 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .filter-option:hover {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding-left: 8px;
+            margin-left: -8px;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-btn-apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn-apply:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-btn-reset {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e0e0e0;
+        }
+
+        .filter-btn-reset:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .status-header-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+
         /* Modal styles */
         .modal {
             display: none; 
@@ -386,6 +510,60 @@
             font-style: italic;
             margin-top: 10px;
         }
+
+        /* Job Details Modal Styles */
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+            word-wrap: break-word;
+        }
+
+        .detail-value a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .detail-value a:hover {
+            text-decoration: underline;
+        }
+
+        .status-badge, .source-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -405,49 +583,59 @@
             <tr>
                 <th onclick="sortTable(0)">Job Title</th>
                 <th onclick="sortTable(1)">Company</th>
-                <th onclick="sortTable(2)">Description</th>
-                <th onclick="sortTable(3)">Resume Version</th>
-                <th onclick="sortTable(4)">Status</th>
-                <th onclick="sortTable(5)">Source</th>
-                <th onclick="sortTable(6)">Created At</th>
+                <th>
+                    <div class="status-header-wrapper">
+                        <span onclick="sortTable(2)" style="cursor: pointer;">Status</span>
+                        <div class="filter-wrapper">
+                            <span class="filter-icon" onclick="event.stopPropagation(); toggleFilterDropdown()">🔽</span>
+                            <div id="filterDropdown" class="filter-dropdown">
+                                <h4>Filter by Status</h4>
+                                {% for status_code, status_label in status_choices %}
+                                <div class="filter-option">
+                                    <input type="checkbox" id="filter-{{ status_code|slugify }}" value="{{ status_code }}" 
+                                           {% if status_code != 'Rejected' and status_code != 'Ghosted' %}checked{% endif %}
+                                           onchange="updateFilterState()">
+                                    <label for="filter-{{ status_code|slugify }}">{{ status_label }}</label>
+                                </div>
+                                {% endfor %}
+                                <div class="filter-actions">
+                                    <button class="filter-btn filter-btn-apply" onclick="applyFilter()">Apply Filter</button>
+                                    <button class="filter-btn filter-btn-reset" onclick="resetFilter()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </th>
+                <th onclick="sortTable(3)">Applied At</th>
                 <th>Steps</th>
             </tr>
         </thead>
         <tbody>
             {% for job in jobs %}
-            <tr>
+            <tr onclick="openJobDetailsModal(event, this)" 
+                data-job-id="{{ job.id }}"
+                data-job-title="{{ job.job_title }}"
+                data-company-name="{{ job.company_name }}"
+                data-company-url="{{ job.company_url }}"
+                data-job-description="{{ job.job_description }}"
+                data-resume-version="{{ job.resume_version }}"
+                data-salary="{{ job.salary|default:'-' }}"
+                data-status="{{ job.status }}"
+                data-source="{{ job.source }}"
+                data-created-at="{{ job.created_at }}"
+                data-updated-at="{{ job.updated_at }}">
                 <td>{{ job.job_title }}</td>
-                <td><a href="{{ job.company_url }}" target="_blank">{{ job.company_name }}</a></td>
-                <td>
-                    <span class="description-short">
-                        {{ job.job_description|slice:":100" }}
-                    </span>
-                    <span class="description-full">
-                        {{ job.job_description }}
-                    </span>
-                    {% if job.job_description|length > 100 %}
-                    <span class="read-more" onclick="toggleDescription(this)">Read more</span>
-                    {% endif %}
-                </td>
-                <td>{{ job.resume_version }}</td>
-                <td>
-                    <select onchange="updateStatus(this, '{{ job.id }}')"
+                <td><a href="{{ job.company_url }}" target="_blank" onclick="event.stopPropagation()">{{ job.company_name }}</a></td>
+                <td onclick="event.stopPropagation()">
+                    <select onchange="updateStatus(this, '{{ job.id }}')"status_code
                         class="status-select status-{{ job.status|slugify }}">
                         {% for status_code, status_label in status_choices %}
                         <option value="{{ status_code }}" {% if job.status == status_code %}selected{% endif %}>{{ status_label }}</option>
                         {% endfor %}
                     </select>
                 </td>
-                <td>
-                    <select onchange="updateSource(this, '{{ job.id }}')"
-                        class="status-select source-{{ job.source|slugify }}">
-                        {% for source_code, source_label in source_choices %}
-                        <option value="{{ source_code }}" {% if job.source == source_code %}selected{% endif %}>{{ source_label }}</option>
-                        {% endfor %}
-                    </select>
-                </td>
                 <td>{{ job.created_at }}</td>
-                <td>
+                <td onclick="event.stopPropagation()">
                     <button class="steps-btn" onclick="openStepsModal('steps-{{ job.id }}')">Show Steps</button>
                     <div id="steps-{{ job.id }}" style="display: none;">
                         <h3>Steps for {{ job.job_title }} at {{ job.company_name }}</h3>
@@ -569,7 +757,135 @@
         </div>
     </div>
 
+    <!-- Job Details Modal -->
+    <div id="jobDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeJobDetailsModal()">&times;</span>
+            <h3 id="detailsModalTitle">Job Application Details</h3>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Job Title</div>
+                    <div class="detail-value" id="detail-job-title"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Company</div>
+                    <div class="detail-value" id="detail-company"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Resume Version</div>
+                    <div class="detail-value" id="detail-resume-version"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Salary</div>
+                    <div class="detail-value" id="detail-salary"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" id="detail-status"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Source</div>
+                    <div class="detail-value" id="detail-source"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Created At</div>
+                    <div class="detail-value" id="detail-created-at"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Last Updated</div>
+                    <div class="detail-value" id="detail-updated-at"></div>
+                </div>
+                <div class="detail-item full-width">
+                    <div class="detail-label">Job Description</div>
+                    <div class="detail-value" id="detail-description">
+                        <span class="modal-description-short"></span>
+                        <span class="modal-description-full" style="display: none;"></span>
+                        <span class="read-more" id="modal-read-more" style="display: none;" onclick="toggleModalDescription()">Read more</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Filter functionality
+        let activeFilters = new Set();
+        
+        // Initialize filters on page load (all except Rejected)
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    activeFilters.add(checkbox.value);
+                }
+            });
+            applyFilterToTable();
+        });
+
+        function toggleFilterDropdown() {
+            const dropdown = document.getElementById('filterDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function updateFilterState() {
+            // This is called when checkboxes change, but we don't apply until "Apply Filter" is clicked
+        }
+
+        function applyFilter() {
+            // Get all checked checkboxes
+            activeFilters.clear();
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    activeFilters.add(checkbox.value);
+                }
+            });
+            
+            applyFilterToTable();
+            toggleFilterDropdown();
+        }
+
+        function applyFilterToTable() {
+            const rows = document.querySelectorAll('#jobsTable tbody tr');
+            rows.forEach(row => {
+                const status = row.dataset.status;
+                if (activeFilters.has(status)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function resetFilter() {
+            // Check all checkboxes except Rejected
+            const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
+            activeFilters.clear();
+            checkboxes.forEach(checkbox => {
+                if (!['Rejected', 'Ghosted'].includes(checkbox.value)) {
+                    checkbox.checked = true;
+                    activeFilters.add(checkbox.value);
+                } else {
+                    checkbox.checked = false;
+                }
+            });
+            
+            applyFilterToTable();
+            toggleFilterDropdown();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const filterWrapper = document.querySelector('.filter-wrapper');
+            const dropdown = document.getElementById('filterDropdown');
+            
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!filterWrapper.contains(event.target)) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        });
+
         function openStepsModal(elementId) {
             const content = document.getElementById(elementId).innerHTML;
             document.getElementById('modalBody').innerHTML = content;
@@ -721,11 +1037,90 @@
             });
         }
 
+        function openJobDetailsModal(event, row) {
+            // Get data from row attributes
+            const jobTitle = row.dataset.jobTitle;
+            const companyName = row.dataset.companyName;
+            const companyUrl = row.dataset.companyUrl;
+            const jobDescription = row.dataset.jobDescription;
+            const resumeVersion = row.dataset.resumeVersion;
+            const salary = row.dataset.salary;
+            const status = row.dataset.status;
+            const source = row.dataset.source;
+            const createdAt = row.dataset.createdAt;
+            const updatedAt = row.dataset.updatedAt;
+
+            // Populate modal
+            document.getElementById('detail-job-title').textContent = jobTitle;
+            document.getElementById('detail-company').innerHTML = `<a href="${companyUrl}" target="_blank">${companyName}</a>`;
+            document.getElementById('detail-resume-version').textContent = resumeVersion;
+            document.getElementById('detail-salary').textContent = salary;
+            
+            // Create status badge
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'status-badge status-' + slugify(status);
+            statusBadge.textContent = status;
+            document.getElementById('detail-status').innerHTML = '';
+            document.getElementById('detail-status').appendChild(statusBadge);
+            
+            // Create source badge
+            const sourceBadge = document.createElement('span');
+            sourceBadge.className = 'source-badge source-' + slugify(source);
+            sourceBadge.textContent = source;
+            document.getElementById('detail-source').innerHTML = '';
+            document.getElementById('detail-source').appendChild(sourceBadge);
+            
+            document.getElementById('detail-created-at').textContent = createdAt;
+            document.getElementById('detail-updated-at').textContent = updatedAt;
+            
+            // Handle job description with read more/less
+            const descriptionShort = document.querySelector('.modal-description-short');
+            const descriptionFull = document.querySelector('.modal-description-full');
+            const readMoreBtn = document.getElementById('modal-read-more');
+            
+            if (jobDescription.length > 200) {
+                descriptionShort.textContent = jobDescription.substring(0, 200) + '...';
+                descriptionFull.textContent = jobDescription;
+                readMoreBtn.style.display = 'inline';
+                descriptionShort.style.display = 'inline';
+                descriptionFull.style.display = 'none';
+                readMoreBtn.textContent = 'Read more';
+            } else {
+                descriptionShort.textContent = jobDescription;
+                descriptionFull.textContent = '';
+                readMoreBtn.style.display = 'none';
+            }
+
+            // Show modal
+            document.getElementById('jobDetailsModal').style.display = 'block';
+        }
+
+        function toggleModalDescription() {
+            const descriptionShort = document.querySelector('.modal-description-short');
+            const descriptionFull = document.querySelector('.modal-description-full');
+            const readMoreBtn = document.getElementById('modal-read-more');
+
+            if (descriptionFull.style.display === 'none' || descriptionFull.style.display === '') {
+                descriptionFull.style.display = 'inline';
+                descriptionShort.style.display = 'none';
+                readMoreBtn.textContent = 'Read less';
+            } else {
+                descriptionFull.style.display = 'none';
+                descriptionShort.style.display = 'inline';
+                readMoreBtn.textContent = 'Read more';
+            }
+        }
+
+        function closeJobDetailsModal() {
+            document.getElementById('jobDetailsModal').style.display = 'none';
+        }
+
         // Close the modal when clicking outside of it
         window.onclick = function(event) {
             const stepsModal = document.getElementById('stepsModal');
             const addStepModal = document.getElementById('addStepModal');
             const addJobModal = document.getElementById('addJobModal');
+            const jobDetailsModal = document.getElementById('jobDetailsModal');
             if (event.target == stepsModal) {
                 stepsModal.style.display = "none";
             }
@@ -734,6 +1129,9 @@
             }
             if (event.target == addJobModal) {
                 addJobModal.style.display = "none";
+            }
+            if (event.target == jobDetailsModal) {
+                jobDetailsModal.style.display = "none";
             }
         }
 
