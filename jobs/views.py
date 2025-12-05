@@ -15,6 +15,7 @@ STATUS_ORDER = Case(
     When(status='Applied', then=4),
     When(status='Ghosted', then=5),
     When(status='Rejected', then=6),
+    When(status='Avoid', then=7),
     output_field=IntegerField(),
 )
 

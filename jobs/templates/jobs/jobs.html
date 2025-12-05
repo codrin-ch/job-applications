@@ -157,6 +157,10 @@
             background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
         }
 
+        .status-avoid {
+            background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+        }
+
         .status-technical-interview {
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: #212529;
@@ -593,7 +597,7 @@
                                 {% for status_code, status_label in status_choices %}
                                 <div class="filter-option">
                                     <input type="checkbox" id="filter-{{ status_code|slugify }}" value="{{ status_code }}" 
-                                           {% if status_code != 'Rejected' and status_code != 'Ghosted' %}checked{% endif %}
+                                           {% if status_code != 'Rejected' and status_code != 'Ghosted' and status_code != 'Avoid' %}checked{% endif %}
                                            onchange="updateFilterState()">
                                     <label for="filter-{{ status_code|slugify }}">{{ status_label }}</label>
                                 </div>
@@ -858,11 +862,11 @@
         }
 
         function resetFilter() {
-            // Check all checkboxes except Rejected
+            // Check all checkboxes except Rejected, Ghosted, and Avoid
             const checkboxes = document.querySelectorAll('#filterDropdown input[type="checkbox"]');
             activeFilters.clear();
             checkboxes.forEach(checkbox => {
-                if (!['Rejected', 'Ghosted'].includes(checkbox.value)) {
+                if (!['Rejected', 'Ghosted', 'Avoid'].includes(checkbox.value)) {
                     checkbox.checked = true;
                     activeFilters.add(checkbox.value);
                 } else {
