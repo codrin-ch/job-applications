@@ -1,7 +1,6 @@
 from django.db import models
 
-class JobApplication(models.Model):
-    STATUS_CHOICES = [
+STATUS_CHOICES = [
         ('Applied', 'Applied'),
         ('Ghosted', 'Ghosted'),
         ('Rejected', 'Rejected'),
@@ -9,11 +8,13 @@ class JobApplication(models.Model):
         ('HR Interview', 'HR Interview'),
         ('Offer', 'Offer'),
     ]
-    SOURCE_CHOICES = [
+SOURCE_CHOICES = [
         ('LinkedIn', 'LinkedIn'),
         ('Careers Website', 'Careers Website'),
         ('Other', 'Other'),
     ]
+
+class JobApplication(models.Model):
     job_title = models.CharField(max_length=100)
     salary = models.CharField(max_length=100, default='', blank=True)
     company_name = models.CharField(max_length=100)

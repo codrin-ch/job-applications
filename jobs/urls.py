@@ -5,8 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.jobs_list, name="index"),
     path("jobapplications/", views.jobs, name="jobapplication"),
-    path("update_status/<int:job_id>/", views.update_job_status, name="update_status"),
-    path("update_source/<int:job_id>/", views.update_job_source, name="update_source"),
+    path("update_job_field/<int:job_id>/", views.update_job_field, name="update_job_field"),
     path("add_step/<int:job_id>/", views.add_step, name="add_step"),
     path("add_job/", views.add_job, name="add_job"),
 ]
