@@ -29,9 +29,43 @@
             color: white;
             font-size: 2.5rem;
             font-weight: 600;
-            margin-bottom: 30px;
-            text-align: center;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nav-link {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
 
         .add-job-btn {
@@ -208,8 +242,6 @@
             border-radius: 50px;
             font-weight: 600;
             font-size: 0.95rem;
-            margin-bottom: 30px;
-            margin-left: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }
@@ -644,13 +676,19 @@
 
 <body>
     <div class="container">
-        <h1>Job Applications</h1>
-        <div class="button-row">
-            <button class="add-job-btn" onclick="openAddJobModal()">+ Add Job Application</button>
+        <div class="header-row">
+            <h1>Job Applications</h1>
             <div class="goal-indicator {% if goal_reached %}goal-reached{% else %}goal-not-reached{% endif %}">
                 <span class="goal-icon">{% if goal_reached %}✓{% else %}✗{% endif %}</span>
                 <span>Daily Goal: {{ today_jobs_count }}/{{ daily_goal }}{% if goal_reached %} ✨{% endif %}</span>
             </div>
+        </div>
+        <div class="nav-links">
+            <a href="/" class="nav-link active">Job Applications</a>
+            <a href="/job-boards/" class="nav-link">Job Boards</a>
+        </div>
+        <div class="button-row">
+            <button class="add-job-btn" onclick="openAddJobModal()">+ Add Job Application</button>
         </div>
         <div class="table-wrapper">
             <table id="jobsTable">
