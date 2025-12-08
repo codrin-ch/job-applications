@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST, require_http_methods
 import json
-from .models import JobApplication, Step, STATUS_CHOICES, SOURCE_CHOICES
+from .models import JobApplication, Step, JobBoard, STATUS_CHOICES, SOURCE_CHOICES
 from django.utils import timezone
 from django.db.models import Case, When, IntegerField
 
@@ -137,6 +137,75 @@ def add_job(request):
                 'source': job.source,
                 'created_at': job.created_at.strftime('%b. %d, %Y, %I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m.') # Match Django default template format roughly
             }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+# Job Boards Views
+def job_boards_list(request):
+    job_boards = JobBoard.objects.order_by('last_visited')
+    
+    # Add visited_today flag to each board
+    today = timezone.now().date()
+    visited_today_count = 0
+    total_boards = job_boards.count()
+    
+    for board in job_boards:
+        if board.last_visited:
+            board.visited_today = board.last_visited.date() == today
+            if board.visited_today:
+                visited_today_count += 1
+        else:
+            board.visited_today = False
+    
+    # Goal is reached when all boards have been visited today
+    all_visited_today = (total_boards > 0 and visited_today_count == total_boards)
+    
+    return render(request, "jobs/job_boards.html", {
+        "job_boards": job_boards,
+        "total_boards": total_boards,
+        "visited_today_count": visited_today_count,
+        "all_visited_today": all_visited_today,
+    })
+
+@require_POST
+def add_job_board(request):
+    try:
+        data = json.loads(request.body)
+        name = data.get('name')
+        url = data.get('url')
+
+        if not all([name, url]):
+            return JsonResponse({'success': False, 'error': 'Name and URL are required'}, status=400)
+
+        job_board = JobBoard.objects.create(
+            name=name,
+            url=url
+        )
+
+        return JsonResponse({
+            'success': True,
+            'job_board': {
+                'id': job_board.id,
+                'name': job_board.name,
+                'url': job_board.url,
+                'last_visited': job_board.last_visited.strftime('%b. %d, %Y, %I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m.') if job_board.last_visited else '-',
+                'created_at': job_board.created_at.strftime('%b. %d, %Y, %I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m.')
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@require_http_methods(['PUT'])
+def update_last_visited(request, board_id):
+    try:
+        job_board = get_object_or_404(JobBoard, pk=board_id)
+        job_board.last_visited = timezone.now()
+        job_board.save(update_fields=['last_visited'])
+        
+        return JsonResponse({
+            'success': True,
+            'last_visited': job_board.last_visited.strftime('%b. %d, %Y, %I:%M %p').replace('AM', 'a.m.').replace('PM', 'p.m.')
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)

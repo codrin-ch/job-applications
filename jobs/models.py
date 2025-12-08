@@ -33,3 +33,13 @@ class Step(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+class JobBoard(models.Model):
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_visited = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return self.name
