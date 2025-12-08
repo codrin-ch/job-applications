@@ -50,9 +50,17 @@ def update_job_field(request, job_id):
         data = json.loads(request.body)
         # get the field name from data object { status: 'new_state' }
         field_name = list(data.keys())[0]
-        valid_choices = STATUS_CHOICES if field_name == 'status' else SOURCE_CHOICES
         new_value = data.get(field_name)
         job = get_object_or_404(JobApplication, pk=job_id)
+        
+        # For salary field, no validation needed (free text)
+        if field_name == 'salary':
+            setattr(job, field_name, new_value)
+            job.save()
+            return JsonResponse({'success': True})
+        
+        # For status and source, validate against choices
+        valid_choices = STATUS_CHOICES if field_name == 'status' else SOURCE_CHOICES
         
         # Check if the new value is valid
         if new_value in [choice[0] for choice in valid_choices]:

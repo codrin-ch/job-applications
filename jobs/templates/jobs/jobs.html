@@ -560,6 +560,77 @@
             text-decoration: underline;
         }
 
+        .editable-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .edit-icon {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 1rem;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .edit-icon:hover {
+            opacity: 1;
+        }
+
+        .salary-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .salary-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+        }
+
+        .cancel-btn {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e0e0e0;
+        }
+
+        .cancel-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
         .status-badge, .source-badge {
             display: inline-block;
             padding: 6px 16px;
@@ -781,7 +852,10 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Salary</div>
-                    <div class="detail-value" id="detail-salary"></div>
+                    <div class="detail-value editable-field" id="detail-salary">
+                        <span id="salary-display"></span>
+                        <span class="edit-icon" id="salary-edit-icon" onclick="editSalary()" title="Edit salary">✏️</span>
+                    </div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
@@ -1053,12 +1127,19 @@
             const source = row.dataset.source;
             const createdAt = row.dataset.createdAt;
             const updatedAt = row.dataset.updatedAt;
+            const jobId = row.dataset.jobId;
+
+            // Store job ID for later use
+            document.getElementById('jobDetailsModal').dataset.jobId = jobId;
 
             // Populate modal
             document.getElementById('detail-job-title').textContent = jobTitle;
             document.getElementById('detail-company').innerHTML = `<a href="${companyUrl}" target="_blank">${companyName}</a>`;
             document.getElementById('detail-resume-version').textContent = resumeVersion;
-            document.getElementById('detail-salary').textContent = salary;
+            
+            // Set salary display and reset edit mode
+            document.getElementById('salary-display').textContent = salary;
+            document.getElementById('salary-edit-icon').style.display = 'inline';
             
             // Create status badge
             const statusBadge = document.createElement('span');
@@ -1308,6 +1389,112 @@
                     }
                 }
             }
+        }
+
+        // Salary editing functions
+        function editSalary() {
+            const salaryContainer = document.getElementById('detail-salary');
+            const salaryDisplay = document.getElementById('salary-display');
+            const editIcon = document.getElementById('salary-edit-icon');
+            const currentSalary = salaryDisplay.textContent;
+
+            // Create input and buttons
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'salary-input';
+            input.value = currentSalary === '-' ? '' : currentSalary;
+            input.id = 'salary-input-field';
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'edit-actions';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'edit-btn save-btn';
+            saveBtn.textContent = 'Save';
+            saveBtn.onclick = saveSalary;
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'edit-btn cancel-btn';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = cancelSalaryEdit;
+
+            actionsDiv.appendChild(saveBtn);
+            actionsDiv.appendChild(cancelBtn);
+
+            // Replace display with input
+            salaryDisplay.style.display = 'none';
+            editIcon.style.display = 'none';
+            salaryContainer.appendChild(input);
+            salaryContainer.appendChild(actionsDiv);
+
+            // Focus on input
+            input.focus();
+            input.select();
+
+            // Allow Enter to save and Escape to cancel
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    saveSalary();
+                } else if (e.key === 'Escape') {
+                    cancelSalaryEdit();
+                }
+            });
+        }
+
+        function saveSalary() {
+            const input = document.getElementById('salary-input-field');
+            const newSalary = input.value.trim() || '-';
+            const jobId = document.getElementById('jobDetailsModal').dataset.jobId;
+
+            // Call API to update salary
+            fetch(`/update_job_field/${jobId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ salary: newSalary })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display
+                    const salaryDisplay = document.getElementById('salary-display');
+                    salaryDisplay.textContent = newSalary;
+                    
+                    // Update the row data attribute
+                    const row = document.querySelector(`tr[data-job-id="${jobId}"]`);
+                    if (row) {
+                        row.dataset.salary = newSalary;
+                    }
+                    
+                    // Exit edit mode
+                    cancelSalaryEdit();
+                } else {
+                    alert('Failed to update salary: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating salary');
+            });
+        }
+
+        function cancelSalaryEdit() {
+            const salaryContainer = document.getElementById('detail-salary');
+            const salaryDisplay = document.getElementById('salary-display');
+            const editIcon = document.getElementById('salary-edit-icon');
+            
+            // Remove input and buttons
+            const input = document.getElementById('salary-input-field');
+            const actions = salaryContainer.querySelector('.edit-actions');
+            
+            if (input) input.remove();
+            if (actions) actions.remove();
+            
+            // Show display and edit icon
+            salaryDisplay.style.display = 'inline';
+            editIcon.style.display = 'inline';
         }
     </script>
 </body>
