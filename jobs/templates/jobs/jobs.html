@@ -720,7 +720,6 @@
                     </div>
                 </th>
                 <th onclick="sortTable(3)">Applied At</th>
-                <th>Steps</th>
             </tr>
         </thead>
         <tbody>
@@ -748,60 +747,52 @@
                     </select>
                 </td>
                 <td>{{ job.created_at }}</td>
-                <td onclick="event.stopPropagation()">
-                    <button class="steps-btn" onclick="openStepsModal('steps-{{ job.id }}')">Show Steps</button>
-                    <div id="steps-{{ job.id }}" style="display: none;">
-                        <h3>Steps for {{ job.job_title }} at {{ job.company_name }}</h3>
-                        <button class="steps-btn" onclick="openAddStepModal('{{ job.id }}')" style="margin-bottom: 10px;">Add New Step</button>
-                        <table class="steps-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Description</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody class="steps-tbody">
-                                {% for step in job.steps.all %}
-                                <tr>
-                                    <td>{{ step.title }}</td>
-                                    <td>
-                                        <span class="step-description-short">
-                                            {{ step.description|slice:":100" }}
-                                        </span>
-                                        <span class="step-description-full">
-                                            {{ step.description }}
-                                        </span>
-                                        {% if step.description|length > 100 %}
-                                        <span class="read-more" onclick="toggleStepDescription(this)">Read more</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ step.created_at }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% if not job.steps.all %}
-                        <p class="no-steps-msg">No steps recorded for this application.</p>
-                        {% endif %}
-                    </div>
-                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
         </div><!-- table-wrapper -->
-    </div><!-- container -->
 
-    <!-- The Modal -->
-    <div id="stepsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeStepsModal()">&times;</span>
-            <div id="modalBody">
-                <!-- Steps content will be populated here -->
+        <!-- Hidden steps cache used by Job Details modal -->
+        <div id="steps-cache" style="display: none;">
+            {% for job in jobs %}
+            <div id="steps-{{ job.id }}">
+                <h3>Steps for {{ job.job_title }} at {{ job.company_name }}</h3>
+                <table class="steps-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="steps-tbody">
+                        {% for step in job.steps.all %}
+                        <tr>
+                            <td>{{ step.title }}</td>
+                            <td>
+                                <span class="step-description-short">
+                                    {{ step.description|slice:":100" }}
+                                </span>
+                                <span class="step-description-full">
+                                    {{ step.description }}
+                                </span>
+                                {% if step.description|length > 100 %}
+                                <span class="read-more" onclick="toggleStepDescription(this)">Read more</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ step.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if not job.steps.all %}
+                <p class="no-steps-msg">No steps recorded for this application.</p>
+                {% endif %}
             </div>
+            {% endfor %}
         </div>
-    </div>
+    </div><!-- container -->
 
     <!-- Add Step Modal -->
     <div id="addStepModal" class="modal">
@@ -919,6 +910,15 @@
                         <span class="read-more" id="modal-read-more" style="display: none;" onclick="toggleModalDescription()">Read more</span>
                     </div>
                 </div>
+                <div class="detail-item full-width">
+                    <div class="detail-label">Steps</div>
+                    <div class="detail-value">
+                        <div class="steps-actions" style="margin-bottom: 10px;">
+                            <button class="steps-btn" id="details-add-step-btn">Add New Step</button>
+                        </div>
+                        <div id="detail-steps-container"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1001,16 +1001,6 @@
                 }
             }
         });
-
-        function openStepsModal(elementId) {
-            const content = document.getElementById(elementId).innerHTML;
-            document.getElementById('modalBody').innerHTML = content;
-            document.getElementById('stepsModal').style.display = "block";
-        }
-
-        function closeStepsModal() {
-            document.getElementById('stepsModal').style.display = "none";
-        }
 
         function openAddStepModal(jobId) {
             document.getElementById('newStepJobId').value = jobId;
@@ -1106,15 +1096,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update the open modal
-                    const modalBody = document.getElementById('modalBody');
-                    const tbody = modalBody.querySelector('.steps-tbody');
-                    const noStepsMsg = modalBody.querySelector('.no-steps-msg');
-                    
-                    if (noStepsMsg) {
-                        noStepsMsg.style.display = 'none';
-                    }
-
                     const newRow = `
                         <tr>
                             <td>${data.step.title}</td>
@@ -1130,17 +1111,71 @@
                             <td>${data.step.created_at}</td>
                         </tr>
                     `;
-                    tbody.insertAdjacentHTML('beforeend', newRow);
 
-                    // Update the hidden div for next time
+                    // Update the hidden steps cache (used when reopening details)
                     const hiddenDiv = document.getElementById(`steps-${jobId}`);
-                    const hiddenTbody = hiddenDiv.querySelector('.steps-tbody');
-                    const hiddenNoStepsMsg = hiddenDiv.querySelector('.no-steps-msg');
-                    
-                    if (hiddenNoStepsMsg) {
-                        hiddenNoStepsMsg.style.display = 'none';
+                    if (hiddenDiv) {
+                        let hiddenTbody = hiddenDiv.querySelector('.steps-tbody');
+                        const hiddenNoStepsMsg = hiddenDiv.querySelector('.no-steps-msg');
+
+                        if (!hiddenTbody) {
+                            // Create table structure if somehow missing
+                            hiddenDiv.innerHTML = `
+                                <h3>Steps for ${data.step.job_title || ''}</h3>
+                                <table class="steps-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="steps-tbody"></tbody>
+                                </table>
+                            `;
+                            hiddenTbody = hiddenDiv.querySelector('.steps-tbody');
+                        }
+
+                        if (hiddenNoStepsMsg) {
+                            hiddenNoStepsMsg.style.display = 'none';
+                        }
+                        hiddenTbody.insertAdjacentHTML('beforeend', newRow);
                     }
-                    hiddenTbody.insertAdjacentHTML('beforeend', newRow);
+
+                    // Update steps in the Job Details modal if it's open for this job
+                    const jobDetailsModal = document.getElementById('jobDetailsModal');
+                    if (jobDetailsModal.style.display === 'block' && jobDetailsModal.dataset.jobId === jobId) {
+                        const detailStepsContainer = document.getElementById('detail-steps-container');
+                        let detailTable = detailStepsContainer.querySelector('.steps-table');
+                        let detailTbody = detailStepsContainer.querySelector('.steps-tbody');
+                        const detailNoStepsMsg = detailStepsContainer.querySelector('.no-steps-msg');
+
+                        if (!detailTable) {
+                            // Create table structure if it doesn't exist yet
+                            detailTable = document.createElement('table');
+                            detailTable.className = 'steps-table';
+                            detailTable.innerHTML = `
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="steps-tbody"></tbody>
+                            `;
+                            detailStepsContainer.insertAdjacentElement('afterbegin', detailTable);
+                            detailTbody = detailTable.querySelector('.steps-tbody');
+                        }
+
+                        if (detailNoStepsMsg) {
+                            detailNoStepsMsg.style.display = 'none';
+                        }
+
+                        if (detailTbody) {
+                            detailTbody.insertAdjacentHTML('beforeend', newRow);
+                        }
+                    }
 
                     closeAddStepModal();
                 } else {
@@ -1214,6 +1249,31 @@
                 readMoreBtn.style.display = 'none';
             }
 
+            // Populate steps section
+            const stepsContainer = document.getElementById('detail-steps-container');
+            const stepsSource = document.getElementById(`steps-${jobId}`);
+            const addStepBtn = document.getElementById('details-add-step-btn');
+
+            addStepBtn.onclick = function() {
+                openAddStepModal(jobId);
+            };
+
+            stepsContainer.innerHTML = '';
+            if (stepsSource) {
+                // Clone the steps table and "no steps" message for the details modal
+                const table = stepsSource.querySelector('.steps-table');
+                const noSteps = stepsSource.querySelector('.no-steps-msg');
+
+                if (table) {
+                    stepsContainer.appendChild(table.cloneNode(true));
+                }
+                if (noSteps) {
+                    stepsContainer.appendChild(noSteps.cloneNode(true));
+                }
+            } else {
+                stepsContainer.innerHTML = '<p class="no-steps-msg">No steps recorded for this application.</p>';
+            }
+
             // Show modal
             document.getElementById('jobDetailsModal').style.display = 'block';
         }
@@ -1240,13 +1300,9 @@
 
         // Close the modal when clicking outside of it
         window.onclick = function(event) {
-            const stepsModal = document.getElementById('stepsModal');
             const addStepModal = document.getElementById('addStepModal');
             const addJobModal = document.getElementById('addJobModal');
             const jobDetailsModal = document.getElementById('jobDetailsModal');
-            if (event.target == stepsModal) {
-                stepsModal.style.display = "none";
-            }
             if (event.target == addStepModal) {
                 addStepModal.style.display = "none";
             }
