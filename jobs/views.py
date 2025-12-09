@@ -5,6 +5,7 @@ import json
 from .models import JobApplication, Step, JobBoard, STATUS_CHOICES, SOURCE_CHOICES
 from django.utils import timezone
 from django.db.models import Case, When, IntegerField, Count
+from django.db.models.functions import TruncDate
 
 
 DAILY_GOAL = 5
@@ -68,6 +69,21 @@ def jobs_list(request):
         }
         for name, count in categories.items()
     ]
+
+    # Calculate daily applications for the growth chart
+    daily_applications = JobApplication.objects.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+    
+    daily_stats = [
+        {
+            "date": item['date'].strftime('%Y-%m-%d'),
+            "count": item['count']
+        }
+        for item in daily_applications
+    ]
     
     return render(request, "jobs/jobs.html", {
         "jobs": jobs, 
@@ -76,7 +92,8 @@ def jobs_list(request):
         "today_jobs_count": today_jobs_count,
         "daily_goal": DAILY_GOAL,
         "goal_reached": today_jobs_count >= DAILY_GOAL,
-        "status_summary_json": json.dumps(status_summary)
+        "status_summary_json": json.dumps(status_summary),
+        "daily_stats_json": json.dumps(daily_stats)
     })
 
 @require_http_methods(['PUT'])

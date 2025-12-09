@@ -901,6 +901,9 @@
                 </div>
                 <canvas id="statusSummaryChart" height="320"></canvas>
             </div>
+            <div class="summary-chart-wrapper" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <canvas id="dailyGrowthChart" height="250"></canvas>
+            </div>
         </div>
     </div>
 
@@ -968,7 +971,9 @@
 
     <script>
         const statusSummaryData = JSON.parse('{{ status_summary_json|escapejs }}');
+        const dailyStatsData = JSON.parse('{{ daily_stats_json|escapejs }}');
         let summaryChart;
+        let dailyGrowthChart;
 
         // Filter functionality
         let activeFilters = new Set();
@@ -1038,6 +1043,7 @@
 
         function openSummaryModal() {
             renderSummaryChart();
+            renderDailyGrowthChart();
             document.getElementById('summaryModal').style.display = "block";
         }
 
@@ -1115,6 +1121,117 @@
                                     const percentage = total ? ((value / total) * 100).toFixed(1) : 0;
                                     const originalLabel = statusSummaryData[context.dataIndex].label;
                                     return `${originalLabel}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDailyGrowthChart() {
+            const canvas = document.getElementById('dailyGrowthChart');
+            if (!canvas) return;
+            
+            if (!dailyStatsData || dailyStatsData.length === 0) {
+                 canvas.style.display = 'none';
+                 return;
+            }
+            canvas.style.display = 'block';
+
+            const dates = dailyStatsData.map(item => item.date);
+            const dailyCounts = dailyStatsData.map(item => item.count);
+            
+            let accumulated = 0;
+            const previousTotals = dailyCounts.map(count => {
+                const currentTotal = accumulated;
+                accumulated += count;
+                return currentTotal;
+            });
+
+            const ctx = canvas.getContext('2d');
+            if (dailyGrowthChart) {
+                dailyGrowthChart.destroy();
+            }
+
+            dailyGrowthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Previous Total',
+                            data: previousTotals,
+                            backgroundColor: '#cfd8dc',
+                            barPercentage: 0.6,
+                            stack: 'combined'
+                        },
+                        {
+                            label: 'New Applications',
+                            data: dailyCounts,
+                            backgroundColor: '#667eea',
+                            borderRadius: { topLeft: 4, topRight: 4 },
+                            barPercentage: 0.6,
+                            stack: 'combined'
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            grid: {
+                                drawBorder: false,
+                                color: '#f0f0f0'
+                            }
+                        },
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                usePointStyle: true
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Applications Growth',
+                            padding: {
+                                bottom: 15
+                            },
+                            font: {
+                                size: 14,
+                                weight: 500
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#2c3e50',
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: ' + total;
                                 }
                             }
                         }
