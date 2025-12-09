@@ -1,0 +1,38 @@
+[tool.black]
+line-length = 91
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # The associated regex matches the files executed when running these tests.
+  | migrations
+  | venv
+)/
+'''
+
+[tool.ruff]
+# Same as Black.
+line-length = 91
+target-version = "py310"
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`), Pycodestyle (`E`, `W`), and isort (`I`)
+select = ["F", "E", "W", "I"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix` is provided).
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".ruff_cache",
+    ".venv",
+    "__pypackages__",
+    "__pycache__",
+    "venv",
+    "*/migrations/*",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "jobs"]

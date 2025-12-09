@@ -1,38 +1,45 @@
 from django.db import models
 
 STATUS_CHOICES = [
-        ('Applied', 'Applied'),
-        ('Ghosted', 'Ghosted'),
-        ('Avoid', 'Avoid'),
-        ('Rejected', 'Rejected'),
-        ('Technical Interview', 'Technical Interview'),
-        ('HR Interview', 'HR Interview'),
-        ('Offer', 'Offer'),
-    ]
+    ("Applied", "Applied"),
+    ("Ghosted", "Ghosted"),
+    ("Avoid", "Avoid"),
+    ("Rejected", "Rejected"),
+    ("Technical Interview", "Technical Interview"),
+    ("HR Interview", "HR Interview"),
+    ("Offer", "Offer"),
+]
 SOURCE_CHOICES = [
-        ('LinkedIn', 'LinkedIn'),
-        ('Careers Website', 'Careers Website'),
-        ('Other', 'Other'),
-    ]
+    ("LinkedIn", "LinkedIn"),
+    ("Careers Website", "Careers Website"),
+    ("Other", "Other"),
+]
+
 
 class JobApplication(models.Model):
     job_title = models.CharField(max_length=100)
-    salary = models.CharField(max_length=100, default='', blank=True)
+    salary = models.CharField(max_length=100, default="", blank=True)
     company_name = models.CharField(max_length=100)
     company_url = models.URLField()
     job_description = models.TextField()
     resume_version = models.CharField(max_length=100)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Applied')
-    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='Careers Website')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Applied")
+    source = models.CharField(
+        max_length=20, choices=SOURCE_CHOICES, default="Careers Website"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
 class Step(models.Model):
-    job_application = models.ForeignKey(JobApplication, on_delete=models.CASCADE, related_name='steps')
+    job_application = models.ForeignKey(
+        JobApplication, on_delete=models.CASCADE, related_name="steps"
+    )
     title = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
 class JobBoard(models.Model):
     name = models.CharField(max_length=100)
@@ -40,6 +47,6 @@ class JobBoard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_visited = models.DateTimeField(null=True, blank=True)
-    
+
     def __str__(self):
         return self.name

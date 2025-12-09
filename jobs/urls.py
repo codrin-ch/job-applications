@@ -5,10 +5,18 @@ from . import views
 urlpatterns = [
     path("", views.jobs_list, name="index"),
     path("jobapplications/", views.jobs, name="jobapplication"),
-    path("update_job_field/<int:job_id>/", views.update_job_field, name="update_job_field"),
+    path(
+        "update_job_field/<int:job_id>/",
+        views.update_job_field,
+        name="update_job_field",
+    ),
     path("add_step/<int:job_id>/", views.add_step, name="add_step"),
     path("add_job/", views.add_job, name="add_job"),
     path("job-boards/", views.job_boards_list, name="job_boards_list"),
     path("add_job_board/", views.add_job_board, name="add_job_board"),
-    path("update_last_visited/<int:board_id>/", views.update_last_visited, name="update_last_visited"),
+    path(
+        "update_last_visited/<int:board_id>/",
+        views.update_last_visited,
+        name="update_last_visited",
+    ),
 ]
