@@ -4,7 +4,8 @@ from django.views.decorators.http import require_POST, require_http_methods
 import json
 from .models import JobApplication, Step, JobBoard, STATUS_CHOICES, SOURCE_CHOICES
 from django.utils import timezone
-from django.db.models import Case, When, IntegerField
+from django.db.models import Case, When, IntegerField, Count
+from django.db.models.functions import TruncDate
 
 
 DAILY_GOAL = 5
@@ -35,13 +36,64 @@ def jobs_list(request):
     today_start = timezone.make_aware(timezone.datetime.combine(today, timezone.datetime.min.time()))
     today_jobs_count = JobApplication.objects.filter(created_at__gte=today_start).count()
     
+    status_counts = JobApplication.objects.values('status').annotate(count=Count('id'))
+    status_count_map = {item['status']: item['count'] for item in status_counts}
+    
+    # Group statuses into categories for the chart
+    categories = {
+        'Applied': 0,
+        'In Progress': 0,
+        'Negative': 0,
+        'Offer': 0,
+    }
+
+    category_map = {
+        'Applied': 'Applied',
+        'HR Interview': 'In Progress',
+        'Technical Interview': 'In Progress',
+        'Rejected': 'Negative',
+        'Ghosted': 'Negative',
+        'Avoid': 'Negative',
+        'Offer': 'Offer',
+    }
+
+    for status, count in status_count_map.items():
+        if status in category_map:
+            category = category_map[status]
+            categories[category] += count
+
+    status_summary = [
+        {
+            "label": name,
+            "count": count
+        }
+        for name, count in categories.items()
+    ]
+
+    # Calculate daily applications for the growth chart
+    daily_applications = JobApplication.objects.annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+    
+    daily_stats = [
+        {
+            "date": item['date'].strftime('%Y-%m-%d'),
+            "count": item['count']
+        }
+        for item in daily_applications
+    ]
+    
     return render(request, "jobs/jobs.html", {
         "jobs": jobs, 
         "status_choices": STATUS_CHOICES,
         "source_choices": SOURCE_CHOICES,
         "today_jobs_count": today_jobs_count,
         "daily_goal": DAILY_GOAL,
-        "goal_reached": today_jobs_count >= DAILY_GOAL
+        "goal_reached": today_jobs_count >= DAILY_GOAL,
+        "status_summary_json": json.dumps(status_summary),
+        "daily_stats_json": json.dumps(daily_stats)
     })
 
 @require_http_methods(['PUT'])
