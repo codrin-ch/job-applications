@@ -10,4 +10,11 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000',
+      '/update_last_visited': 'http://localhost:8000',
+      '/add_job_board': 'http://localhost:8000',
+    }
+  }
 })

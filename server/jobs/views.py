@@ -316,3 +316,32 @@ def update_last_visited(request, board_id):
         )
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+def get_job_boards(request):
+    job_boards = JobBoard.objects.order_by("last_visited")
+
+    # Add visited_today flag to each board
+    today = timezone.now().date()
+    data = []
+    
+    for board in job_boards:
+        visited_today = False
+        if board.last_visited:
+            visited_today = board.last_visited.date() == today
+        
+        data.append({
+            "id": board.id,
+            "name": board.name,
+            "url": board.url,
+            "last_visited": (
+                board.last_visited.strftime("%b. %d, %Y, %I:%M %p")
+                .replace("AM", "a.m.")
+                .replace("PM", "p.m.")
+                if board.last_visited
+                else None
+            ),
+            "visited_today": visited_today
+        })
+
+    return JsonResponse({"job_boards": data})
