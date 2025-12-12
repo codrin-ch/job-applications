@@ -1,75 +1,85 @@
-# React + TypeScript + Vite
+# Job Applications Tracker - Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React-based frontend for the Job Applications Tracker application.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18+
+- npm (Node Package Manager)
 
-## React Compiler
+## Installation
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+1.  **Navigate to the client directory:**
 
-Note: This will impact Vite dev & build performances.
+    ```bash
+    cd client
+    ```
 
-## Expanding the ESLint configuration
+2.  **Install dependencies:**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+    ```bash
+    npm install
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Running the Application
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1.  **Start the development server:**
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+    ```bash
+    npm run dev
+    ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2.  **Access the application:**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+    Open your web browser and navigate to [http://localhost:5173/](http://localhost:5173/).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+    *Note: Ensure the Django server is running on port 8000 for API requests to work.*
+
+## Project Structure
+
+- `src/`: Main source directory.
+    - `components/`: React components (JobApplications, JobBoards, etc.).
+    - `utils/`: Utility functions (CSRF handling).
+    - `App.tsx`: Main application component and routing.
+    - `main.tsx`: Entry point.
+- `public/`: Static assets.
+- `vite.config.ts`: Vite configuration.
+
+## UI Features & Capabilities
+
+The client provides a modern, responsive user interface mirroring the server-side functionalities:
+
+### Dashboard & Analytics
+- **Daily Goal Tracker:** Visual indicator showing today's progress against a daily application goal.
+- **Application Summary:** Interactive charts (Chart.js) visualizing application status distribution and daily application growth.
+- **Summary Modal:** Quick access to analytics charts.
+
+### Job Application Management
+- **Add New Applications:** Modal form to quickly log new applications with details like Company, Job Description, Salary, etc.
+- **Interactive List View:**
+    - **Sorting:** Sort applications by Title, Company, Status, or Date.
+    - **Filtering:** Filter the list by specific statuses (e.g., hide 'Rejected').
+    - **Inline Status Updates:** Change application status directly from the list view.
+- **Detailed View:** Click any application to see full details in a modal.
+    - **Activity Steps:** Track specific interaction steps (e.g., "Screening Call").
+    - **Editable Fields:** Inline editing for Salary.
+    - **Rich Text:** "Read more" functionality for long descriptions.
+
+### Job Boards Tracker
+- **Board Management:** Add and track various job boards.
+- **Daily Visit Tracking:** Track daily visits to ensure consistent sourcing habits. Links update "Last Visited" timestamp automatically.
+
+### Workflow Customization
+- **Status Filtering:** Detailed filter dropdown to view specific subsets of applications.
+- **Visual Cues:** Distinct styling for different statuses.
+
+## Linting
+
+This project uses ESLint for code quality and linting.
+
+1.  **Run Linter:**
+
+    Check for code issues:
+    ```bash
+    npm run lint
+    ```

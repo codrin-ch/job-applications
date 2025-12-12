@@ -120,12 +120,7 @@ export const JobApplications = () => {
         description: ''
     });
 
-    useEffect(() => {
-        fetchJobs();
-    }, []);
-
     const fetchJobs = () => {
-        setLoading(true);
         fetch('/api/jobs/')
             .then(res => res.json())
             .then((data: JobsData) => {
@@ -149,6 +144,10 @@ export const JobApplications = () => {
                 setLoading(false);
             });
     };
+
+    useEffect(() => {
+        fetchJobs();
+    }, []);
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
