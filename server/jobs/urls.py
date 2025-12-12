@@ -20,4 +20,5 @@ urlpatterns = [
         name="update_last_visited",
     ),
     path("api/job-boards/", views.get_job_boards, name="get_job_boards"),
+    path("api/jobs/", views.get_jobs, name="get_jobs"),
 ]

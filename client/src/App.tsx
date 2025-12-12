@@ -1,11 +1,18 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { JobBoards } from './components/JobBoards';
+import { JobApplications } from './components/JobApplications';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <JobBoards />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<JobApplications />} />
+          <Route path="/job-boards" element={<JobBoards />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

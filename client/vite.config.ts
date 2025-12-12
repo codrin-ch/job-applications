@@ -15,6 +15,9 @@ export default defineConfig({
       '/api': 'http://localhost:8000',
       '/update_last_visited': 'http://localhost:8000',
       '/add_job_board': 'http://localhost:8000',
+      '/add_job': 'http://localhost:8000',
+      '/add_step': 'http://localhost:8000',
+      '/update_job_field': 'http://localhost:8000',
     }
   }
 })

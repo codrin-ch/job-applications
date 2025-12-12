@@ -345,3 +345,97 @@ def get_job_boards(request):
         })
 
     return JsonResponse({"job_boards": data})
+
+
+def get_jobs(request):
+    # Calculate today's job applications count
+    today = timezone.now().date()
+    today_start = timezone.make_aware(
+        timezone.datetime.combine(today, timezone.datetime.min.time())
+    )
+    today_jobs_count = JobApplication.objects.filter(created_at__gte=today_start).count()
+    goal_reached = today_jobs_count >= DAILY_GOAL
+
+    # Statistics for charts
+    status_counts = JobApplication.objects.values("status").annotate(count=Count("id"))
+    status_count_map = {item["status"]: item["count"] for item in status_counts}
+
+    categories = {
+        "Applied": 0,
+        "In Progress": 0,
+        "Negative": 0,
+        "Offer": 0,
+    }
+
+    category_map = {
+        "Applied": "Applied",
+        "HR Interview": "In Progress",
+        "Technical Interview": "In Progress",
+        "Rejected": "Negative",
+        "Ghosted": "Negative",
+        "Avoid": "Negative",
+        "Offer": "Offer",
+    }
+
+    for status, count in status_count_map.items():
+        if status in category_map:
+            category = category_map[status]
+            categories[category] += count
+
+    status_summary = [
+        {"label": name, "count": count} for name, count in categories.items()
+    ]
+
+    daily_applications = (
+        JobApplication.objects.annotate(date=TruncDate("created_at"))
+        .values("date")
+        .annotate(count=Count("id"))
+        .order_by("date")
+    )
+
+    daily_stats = [
+        {"date": item["date"].strftime("%Y-%m-%d"), "count": item["count"]}
+        for item in daily_applications
+    ]
+
+    # Jobs list
+    jobs_queryset = (
+        JobApplication.objects.annotate(status_priority=STATUS_ORDER)
+        .order_by("status_priority", "-created_at")
+        .prefetch_related("steps")
+    )
+    
+    jobs_data = []
+    for job in jobs_queryset:
+        steps = [
+            {
+                "title": step.title,
+                "description": step.description,
+                "created_at": step.created_at.strftime("%Y-%m-%d %H:%M")
+            }
+            for step in job.steps.all()
+        ]
+        jobs_data.append({
+            "id": job.id,
+            "job_title": job.job_title,
+            "company_name": job.company_name,
+            "company_url": job.company_url,
+            "job_description": job.job_description,
+            "resume_version": job.resume_version,
+            "salary": job.salary,
+            "status": job.status,
+            "source": job.source,
+            "created_at": job.created_at.strftime("%b. %d, %Y, %I:%M %p").replace("AM", "a.m.").replace("PM", "p.m."),
+            "updated_at": job.updated_at.strftime("%b. %d, %Y, %I:%M %p").replace("AM", "a.m.").replace("PM", "p.m."),
+            "steps": steps
+        })
+
+    return JsonResponse({
+        "jobs": jobs_data,
+        "today_jobs_count": today_jobs_count,
+        "daily_goal": DAILY_GOAL,
+        "goal_reached": goal_reached,
+        "status_summary": status_summary,
+        "daily_stats": daily_stats,
+        "status_choices": [s[0] for s in STATUS_CHOICES], # Just sending codes for now, or full tuples if needed
+    })

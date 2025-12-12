@@ -384,7 +384,7 @@
                         <td>{{ board.name }}</td>
                         <td>
                             <a href="{{ board.url }}" target="_blank" onclick="event.stopPropagation(); markAsVisited({{ board.id }}, this)">
-                                {{ board.url }}
+                                {{ board.url|truncatechars:50 }}
                             </a>
                         </td>
                         <td>

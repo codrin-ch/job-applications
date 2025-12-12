@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getCookie } from '../utils/csrf';
 import './JobBoards.css';
 
@@ -157,8 +158,8 @@ export const JobBoards = () => {
                 </div>
 
                 <div className="nav-links">
-                    <a href="/" className="nav-link">Job Applications</a>
-                    <a href="/job-boards" className="nav-link active">Job Boards</a>
+                    <Link to="/" className="nav-link">Job Applications</Link>
+                    <Link to="/job-boards" className="nav-link active">Job Boards</Link>
                 </div>
 
                 <button className="add-board-btn" onClick={() => setIsModalOpen(true)}>+ Add Job Board</button>
@@ -179,7 +180,7 @@ export const JobBoards = () => {
                                         <td>{board.name}</td>
                                         <td>
                                             <a href={board.url} target="_blank" rel="noopener noreferrer" onClick={(e) => handleLinkClick(board.id, e)}>
-                                                {board.url}
+                                                {board.url.length > 50 ? `${board.url.substring(0, 50)}...` : board.url}
                                             </a>
                                         </td>
                                         <td>
