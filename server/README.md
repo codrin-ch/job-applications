@@ -1,6 +1,6 @@
-# Job Applications Tracker
+# Job Applications Tracker - API Server
 
-This is a Django-based application for tracking job applications.
+This is the Django-based API backend for the Job Applications Tracker. It provides JSON endpoints for the React client to manage job applications and job boards.
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ This is a Django-based application for tracking job applications.
     python manage.py createsuperuser
     ```
 
-## Running the Application
+## Running the Server
 
 1.  **Start the development server:**
 
@@ -51,46 +51,56 @@ This is a Django-based application for tracking job applications.
     python manage.py runserver
     ```
 
-2.  **Access the application:**
+2.  **Access the API:**
     
-    Open your web browser and navigate to [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
-
-    The admin interface is available at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/).
+    The server runs on [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+    
+    - Admin Interface: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+    - API Endpoints (see below)
 
 ## Project Structure
 
-- `jobs/`: Main application containing models, views, and templates.
+- `jobs/`: Main application containing models and views (API controllers).
 - `config/`: Project configuration settings.
-- `db.sqlite3`: SQLite database file (created after migration).
-- `manage.py`: Django's command-line utility for administrative tasks.
+- `db.sqlite3`: SQLite database file.
+- `manage.py`: Django's command-line utility.
 
-## UI Features & Capabilities
+## API Endpoints
 
-The application provides a modern, responsive user interface with the following capabilities:
+The server exposes the following JSON endpoints:
 
-### Dashboard & Analytics
-- **Daily Goal Tracker:** Visual indicator showing today's progress against a daily application goal (default: 5).
-- **Application Summary:** Interactive charts visualizing application status distribution and daily application growth over time.
-- **Summary Modal:** Quick access to analytics without leaving the main view.
+### Job Applications
 
-### Job Application Management
-- **Add New Applications:** targeted modal form to quickly log new applications with essential details (Company, URL, Job Description, Salary, etc.).
-- **Interactive List View:**
-    - **Sorting:** Sort applications by Title, Company, Status, or Date.
-    - **Filtering:** Filter the list by specific statuses (e.g., hide 'Rejected' or 'Avoid').
-    - **Inline Status Updates:** Change application status (e.g., Applied -> Interview) directly from the list view.
-- **Detailed View:** Click any application to see full details in a modal.
-    - **Activity Steps:** Track specific interaction steps for each job (e.g., "Screening Call", "Take-home Assignment").
-    - **Editable Fields:** Inline editing capabilities for fields like Salary.
-    - **Rich Text:** "Read more" functionality for long job descriptions.
+- **`GET /api/jobs/`**
+  - Returns a summary of job applications, including:
+    - List of all jobs (sorted by status and date).
+    - Daily application stats (for graphs).
+    - Status summary counts.
+    - Today's application count vs daily goal.
 
-### Job Boards Tracker
-- **Board Management:** Keep track of various job boards used for sourcing.
-- **Daily Visit Tracking:** One-click mechanism to mark boards as "visited" for the day to ensure consistent sourcing habits.
+- **`POST /add_job/`**
+  - Creates a new job application.
+  - Body: `{ job_title, company_name, company_url, job_description, resume_version, salary, status, source }`
 
-### Workflow Customization
-- **Statuses:** Pre-defined status workflow including: *Applied, Technical Interview, HR Interview, Offer, Rejected, Ghosted, Avoid*.
-- **Visual Cues:** Distinct color coding for different statuses and sources to improve readability.
+- **`PUT /update_job_field/<int:job_id>/`**
+  - Updates a specific field of a job application.
+  - Body: `{ field_name: value }` (e.g., `{ "status": "Rejected" }`)
+
+- **`POST /add_step/<int:job_id>/`**
+  - Adds a new activity step to a job application.
+  - Body: `{ title, description }`
+
+### Job Boards
+
+- **`GET /api/job-boards/`**
+  - Returns a list of job boards with their last visited status.
+
+- **`POST /add_job_board/`**
+  - Adds a new job board.
+  - Body: `{ name, url }`
+
+- **`PUT /update_last_visited/<int:board_id>/`**
+  - Updates the `last_visited` timestamp for a job board to now.
 
 ## Linting
 
