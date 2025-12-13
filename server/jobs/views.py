@@ -3,7 +3,7 @@ import json
 from django.db.models import Case, Count, IntegerField, When
 from django.db.models.functions import TruncDate
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -22,92 +22,8 @@ STATUS_ORDER = Case(
 )
 
 
-def jobs(request):
-    queryset = JobApplication.objects.order_by("-created_at").values(
-        "job_title",
-        "company_name",
-        "company_url",
-        "job_description",
-        "resume_version",
-        "salary",
-        "status",
-        "created_at",
-    )
-    data = list(queryset)
-    return JsonResponse(data, safe=False)
 
 
-def jobs_list(request):
-    jobs = (
-        JobApplication.objects.annotate(status_priority=STATUS_ORDER)
-        .order_by("status_priority", "-created_at")
-        .prefetch_related("steps")
-    )
-
-    # Calculate today's job applications count
-    today = timezone.now().date()
-    today_start = timezone.make_aware(
-        timezone.datetime.combine(today, timezone.datetime.min.time())
-    )
-    today_jobs_count = JobApplication.objects.filter(created_at__gte=today_start).count()
-
-    status_counts = JobApplication.objects.values("status").annotate(count=Count("id"))
-    status_count_map = {item["status"]: item["count"] for item in status_counts}
-
-    # Group statuses into categories for the chart
-    categories = {
-        "Applied": 0,
-        "In Progress": 0,
-        "Negative": 0,
-        "Offer": 0,
-    }
-
-    category_map = {
-        "Applied": "Applied",
-        "HR Interview": "In Progress",
-        "Technical Interview": "In Progress",
-        "Rejected": "Negative",
-        "Ghosted": "Negative",
-        "Avoid": "Negative",
-        "Offer": "Offer",
-    }
-
-    for status, count in status_count_map.items():
-        if status in category_map:
-            category = category_map[status]
-            categories[category] += count
-
-    status_summary = [
-        {"label": name, "count": count} for name, count in categories.items()
-    ]
-
-    # Calculate daily applications for the growth chart
-    daily_applications = (
-        JobApplication.objects.annotate(date=TruncDate("created_at"))
-        .values("date")
-        .annotate(count=Count("id"))
-        .order_by("date")
-    )
-
-    daily_stats = [
-        {"date": item["date"].strftime("%Y-%m-%d"), "count": item["count"]}
-        for item in daily_applications
-    ]
-
-    return render(
-        request,
-        "jobs/jobs.html",
-        {
-            "jobs": jobs,
-            "status_choices": STATUS_CHOICES,
-            "source_choices": SOURCE_CHOICES,
-            "today_jobs_count": today_jobs_count,
-            "daily_goal": DAILY_GOAL,
-            "goal_reached": today_jobs_count >= DAILY_GOAL,
-            "status_summary_json": json.dumps(status_summary),
-            "daily_stats_json": json.dumps(daily_stats),
-        },
-    )
 
 
 @require_http_methods(["PUT"])
@@ -230,35 +146,6 @@ def add_job(request):
 
 
 # Job Boards Views
-def job_boards_list(request):
-    job_boards = JobBoard.objects.order_by("last_visited")
-
-    # Add visited_today flag to each board
-    today = timezone.now().date()
-    visited_today_count = 0
-    total_boards = job_boards.count()
-
-    for board in job_boards:
-        if board.last_visited:
-            board.visited_today = board.last_visited.date() == today
-            if board.visited_today:
-                visited_today_count += 1
-        else:
-            board.visited_today = False
-
-    # Goal is reached when all boards have been visited today
-    all_visited_today = total_boards > 0 and visited_today_count == total_boards
-
-    return render(
-        request,
-        "jobs/job_boards.html",
-        {
-            "job_boards": job_boards,
-            "total_boards": total_boards,
-            "visited_today_count": visited_today_count,
-            "all_visited_today": all_visited_today,
-        },
-    )
 
 
 @require_POST
