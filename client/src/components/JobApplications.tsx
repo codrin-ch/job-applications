@@ -65,21 +65,41 @@ interface JobsData {
     status_choices: string[];
 }
 
+interface JobApplicationsStats {
+    today_jobs_count: number,
+    daily_goal: number,
+    goal_reached: boolean,
+    status_summary: StatusSummary[],
+    daily_stats: DailyStat[],
+}
+
+const DEFAULT_JOB_APPLICATION_STATS = {
+    today_jobs_count: 0,
+    daily_goal: 5,
+    goal_reached: false,
+    status_summary: [],
+    daily_stats: [],
+}
+
+const DEFAULT_NEW_JOB = {
+    job_title: '',
+    company_name: '',
+    company_url: '',
+    job_description: '',
+    resume_version: '',
+    salary: '',
+    status: 'Applied',
+    source: 'Careers Website'
+};
+
+const DEFAULT_NEW_STEP = {
+    title: '',
+    description: ''
+};
+
 export const JobApplications = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [stats, setStats] = useState<{
-        today_jobs_count: number;
-        daily_goal: number;
-        goal_reached: boolean;
-        status_summary: StatusSummary[];
-        daily_stats: DailyStat[];
-    }>({
-        today_jobs_count: 0,
-        daily_goal: 5,
-        goal_reached: false,
-        status_summary: [],
-        daily_stats: []
-    });
+    const [stats, setStats] = useState<JobApplicationsStats>(DEFAULT_JOB_APPLICATION_STATS);
     const [loading, setLoading] = useState(true);
     const [statusChoices, setStatusChoices] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -104,21 +124,9 @@ export const JobApplications = () => {
     }, [selectedJob]);
 
     // Form states
-    const [newJob, setNewJob] = useState({
-        job_title: '',
-        company_name: '',
-        company_url: '',
-        job_description: '',
-        resume_version: '',
-        salary: '',
-        status: 'Applied',
-        source: 'Careers Website'
-    });
+    const [newJob, setNewJob] = useState(DEFAULT_NEW_JOB);
 
-    const [newStep, setNewStep] = useState({
-        title: '',
-        description: ''
-    });
+    const [newStep, setNewStep] = useState(DEFAULT_NEW_STEP);
 
     const fetchJobs = () => {
         fetch('/api/jobs/')
@@ -253,7 +261,7 @@ export const JobApplications = () => {
                     setJobs(jobs.map(j => j.id === selectedJob.id ? updatedJob : j));
 
                     setIsAddStepModalOpen(false);
-                    setNewStep({ title: '', description: '' });
+                    setNewStep(DEFAULT_NEW_STEP);
                 } else {
                     alert('Failed to add step: ' + data.error);
                 }
@@ -280,16 +288,7 @@ export const JobApplications = () => {
                     // Ideally reload or add to list. Reloading gets fresh stats too.
                     fetchJobs();
                     setIsAddJobModalOpen(false);
-                    setNewJob({
-                        job_title: '',
-                        company_name: '',
-                        company_url: '',
-                        job_description: '',
-                        resume_version: '',
-                        salary: '',
-                        status: 'Applied',
-                        source: 'Careers Website'
-                    });
+                    setNewJob(DEFAULT_NEW_JOB);
                 } else {
                     alert("Failed to add job: " + data.error);
                 }
