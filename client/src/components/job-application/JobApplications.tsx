@@ -7,6 +7,7 @@ import { JobSummaryModal } from './JobSummaryModal';
 import { JobDetailsModal } from './JobDetailsModal';
 import { AddStepModal } from './AddStepModal';
 import { AddJobModal } from './AddJobModal';
+import { StatusFilter } from './StatusFilter';
 
 const DEFAULT_JOB_APPLICATION_STATS: JobApplicationsStats = {
     today_jobs_count: 0,
@@ -16,14 +17,18 @@ const DEFAULT_JOB_APPLICATION_STATS: JobApplicationsStats = {
     daily_stats: [],
 }
 
+interface SortConfig {
+    key: 'job_title' | 'company_name' | 'created_at' | 'status';
+    direction: 'asc' | 'desc';
+}
+
 export const JobApplications = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [stats, setStats] = useState<JobApplicationsStats>(DEFAULT_JOB_APPLICATION_STATS);
     const [loading, setLoading] = useState(true);
     const [statusChoices, setStatusChoices] = useState<string[]>([]);
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
     const [filterStatus, setFilterStatus] = useState<string[]>([]); // To be populated from status choices
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Modals state
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
@@ -60,7 +65,7 @@ export const JobApplications = () => {
         fetchJobs();
     }, []);
 
-    const handleSort = (key: string) => {
+    const handleSort = (key: SortConfig['key']) => {
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
@@ -79,9 +84,7 @@ export const JobApplications = () => {
         // Sort
         if (sortConfig) {
             result = [...result].sort((a, b) => {
-                // @ts-ignore
                 const aVal = a[sortConfig.key] || '';
-                // @ts-ignore
                 const bVal = b[sortConfig.key] || '';
 
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -146,38 +149,12 @@ export const JobApplications = () => {
                                 <th onClick={() => handleSort('job_title')}>Job Title</th>
                                 <th onClick={() => handleSort('company_name')}>Company</th>
                                 <th>
-                                    <div className="status-header-wrapper">
-                                        <span onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>Status</span>
-                                        <div className="filter-wrapper">
-                                            <span className="filter-icon" onClick={(e) => { e.stopPropagation(); setIsFilterOpen(!isFilterOpen); }}>🔽</span>
-                                            {isFilterOpen && (
-                                                <div className="filter-dropdown show" onClick={(e) => e.stopPropagation()}>
-                                                    <h4>Filter by Status</h4>
-                                                    {statusChoices.map(status => (
-                                                        <div className="filter-option" key={status}>
-                                                            <input
-                                                                type="checkbox"
-                                                                id={`filter-${status}`}
-                                                                checked={filterStatus.includes(status)}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setFilterStatus([...filterStatus, status]);
-                                                                    } else {
-                                                                        setFilterStatus(filterStatus.filter(s => s !== status));
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <label htmlFor={`filter-${status}`}>{status}</label>
-                                                        </div>
-                                                    ))}
-                                                    <div className="filter-actions">
-                                                        <button className="filter-btn filter-btn-apply" onClick={() => setIsFilterOpen(false)}>Apply Filter</button>
-                                                        <button className="filter-btn filter-btn-reset" onClick={() => setFilterStatus(statusChoices)}>Reset</button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                    <StatusFilter
+                                        statusChoices={statusChoices}
+                                        filterStatus={filterStatus}
+                                        onFilterChange={setFilterStatus}
+                                        onSortClick={() => handleSort('status')}
+                                    />
                                 </th>
                                 <th onClick={() => handleSort('created_at')}>Applied At</th>
                             </tr>
