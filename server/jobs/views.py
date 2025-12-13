@@ -20,10 +20,15 @@ STATUS_ORDER = Case(
     When(status="Avoid", then=7),
     output_field=IntegerField(),
 )
-
-
-
-
+CATEGORY_MAP = {
+    "Applied": "Applied",
+    "HR Interview": "In Progress",
+    "Technical Interview": "In Progress",
+    "Rejected": "Negative",
+    "Ghosted": "Negative",
+    "Avoid": "Negative",
+    "Offer": "Offer",
+}
 
 
 @require_http_methods(["PUT"])
@@ -211,25 +216,27 @@ def get_job_boards(request):
     # Add visited_today flag to each board
     today = timezone.now().date()
     data = []
-    
+
     for board in job_boards:
         visited_today = False
         if board.last_visited:
             visited_today = board.last_visited.date() == today
-        
-        data.append({
-            "id": board.id,
-            "name": board.name,
-            "url": board.url,
-            "last_visited": (
-                board.last_visited.strftime("%b. %d, %Y, %I:%M %p")
-                .replace("AM", "a.m.")
-                .replace("PM", "p.m.")
-                if board.last_visited
-                else None
-            ),
-            "visited_today": visited_today
-        })
+
+        data.append(
+            {
+                "id": board.id,
+                "name": board.name,
+                "url": board.url,
+                "last_visited": (
+                    board.last_visited.strftime("%b. %d, %Y, %I:%M %p")
+                    .replace("AM", "a.m.")
+                    .replace("PM", "p.m.")
+                    if board.last_visited
+                    else None
+                ),
+                "visited_today": visited_today,
+            }
+        )
 
     return JsonResponse({"job_boards": data})
 
@@ -254,19 +261,9 @@ def get_jobs(request):
         "Offer": 0,
     }
 
-    category_map = {
-        "Applied": "Applied",
-        "HR Interview": "In Progress",
-        "Technical Interview": "In Progress",
-        "Rejected": "Negative",
-        "Ghosted": "Negative",
-        "Avoid": "Negative",
-        "Offer": "Offer",
-    }
-
     for status, count in status_count_map.items():
-        if status in category_map:
-            category = category_map[status]
+        if status in CATEGORY_MAP:
+            category = CATEGORY_MAP[status]
             categories[category] += count
 
     status_summary = [
@@ -291,38 +288,48 @@ def get_jobs(request):
         .order_by("status_priority", "-created_at")
         .prefetch_related("steps")
     )
-    
+
     jobs_data = []
     for job in jobs_queryset:
         steps = [
             {
                 "title": step.title,
                 "description": step.description,
-                "created_at": step.created_at.strftime("%Y-%m-%d %H:%M")
+                "created_at": step.created_at.strftime("%Y-%m-%d %H:%M"),
             }
             for step in job.steps.all()
         ]
-        jobs_data.append({
-            "id": job.id,
-            "job_title": job.job_title,
-            "company_name": job.company_name,
-            "company_url": job.company_url,
-            "job_description": job.job_description,
-            "resume_version": job.resume_version,
-            "salary": job.salary,
-            "status": job.status,
-            "source": job.source,
-            "created_at": job.created_at.strftime("%b. %d, %Y, %I:%M %p").replace("AM", "a.m.").replace("PM", "p.m."),
-            "updated_at": job.updated_at.strftime("%b. %d, %Y, %I:%M %p").replace("AM", "a.m.").replace("PM", "p.m."),
-            "steps": steps
-        })
+        jobs_data.append(
+            {
+                "id": job.id,
+                "job_title": job.job_title,
+                "company_name": job.company_name,
+                "company_url": job.company_url,
+                "job_description": job.job_description,
+                "resume_version": job.resume_version,
+                "salary": job.salary,
+                "status": job.status,
+                "source": job.source,
+                "created_at": job.created_at.strftime("%b. %d, %Y, %I:%M %p")
+                .replace("AM", "a.m.")
+                .replace("PM", "p.m."),
+                "updated_at": job.updated_at.strftime("%b. %d, %Y, %I:%M %p")
+                .replace("AM", "a.m.")
+                .replace("PM", "p.m."),
+                "steps": steps,
+            }
+        )
 
-    return JsonResponse({
-        "jobs": jobs_data,
-        "today_jobs_count": today_jobs_count,
-        "daily_goal": DAILY_GOAL,
-        "goal_reached": goal_reached,
-        "status_summary": status_summary,
-        "daily_stats": daily_stats,
-        "status_choices": [s[0] for s in STATUS_CHOICES], # Just sending codes for now, or full tuples if needed
-    })
+    return JsonResponse(
+        {
+            "jobs": jobs_data,
+            "today_jobs_count": today_jobs_count,
+            "daily_goal": DAILY_GOAL,
+            "goal_reached": goal_reached,
+            "status_summary": status_summary,
+            "daily_stats": daily_stats,
+            "status_choices": [
+                s[0] for s in STATUS_CHOICES
+            ],  # Just sending codes for now, or full tuples if needed
+        }
+    )

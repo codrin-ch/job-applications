@@ -61,7 +61,7 @@ export const JobSummaryModal: React.FC<JobSummaryModalProps> = ({ isOpen, onClos
                                     },
                                     tooltip: {
                                         callbacks: {
-                                            label: function (context: any) {
+                                            label: function (context) {
                                                 const value = context.parsed;
                                                 const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
                                                 const percentage = total ? ((value / total) * 100).toFixed(1) : 0;
@@ -154,10 +154,10 @@ export const JobSummaryModal: React.FC<JobSummaryModalProps> = ({ isOpen, onClos
                                         backgroundColor: '#2c3e50',
                                         padding: 10,
                                         callbacks: {
-                                            footer: function (tooltipItems: any[]) {
+                                            footer: function (tooltipItems) {
                                                 let total = 0;
                                                 tooltipItems.forEach(function (tooltipItem) {
-                                                    total += tooltipItem.parsed.y;
+                                                    total += tooltipItem.parsed.y ?? 0;
                                                 });
                                                 return 'Total: ' + total;
                                             }

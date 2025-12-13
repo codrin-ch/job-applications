@@ -375,16 +375,6 @@ td a:hover {
     font-family: 'Poppins', sans-serif;
 }
 
-.filter-btn-apply {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.filter-btn-apply:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
 .filter-btn-reset {
     background: #f8f9fa;
     color: #6c757d;

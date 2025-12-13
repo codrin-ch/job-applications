@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { getCookie } from '../utils/csrf';
 import './JobBoards.css';
 
+const DEFAULT_SORTING_CONFIG: SortingConfig = { key: 'last_visited', direction: 'asc' };
+
 interface JobBoard {
     id: number;
     name: string;
@@ -11,12 +13,17 @@ interface JobBoard {
     visited_today: boolean;
 }
 
+interface SortingConfig {
+    key: keyof JobBoard;
+    direction: 'asc' | 'desc';
+}
+
 export const JobBoards = () => {
     const [boards, setBoards] = useState<JobBoard[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newBoardName, setNewBoardName] = useState('');
     const [newBoardUrl, setNewBoardUrl] = useState('');
-    const [sortConfig, setSortConfig] = useState<{ key: keyof JobBoard; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<SortingConfig>(DEFAULT_SORTING_CONFIG);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

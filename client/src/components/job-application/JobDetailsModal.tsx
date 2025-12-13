@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { Job } from '../../types';
 import { ReadMore } from './ReadMore';
 import { getCookie } from '../../utils/csrf';
@@ -14,13 +14,6 @@ interface JobDetailsModalProps {
 export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, onClose, onJobUpdate, onAddStep }) => {
     const [isEditingSalary, setIsEditingSalary] = useState(false);
     const [salaryValue, setSalaryValue] = useState('');
-
-    useEffect(() => {
-        if (job) {
-            setSalaryValue(job.salary || '');
-            setIsEditingSalary(false);
-        }
-    }, [job]);
 
     if (!isOpen || !job) return null;
 
