@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { JobBoards } from './components/JobBoards';
-import { JobApplications } from './components/JobApplications';
+import { JobApplications } from './components/job-application/JobApplications';
 import './App.css';
 
 function App() {
