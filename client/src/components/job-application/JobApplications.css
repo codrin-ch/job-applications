@@ -677,3 +677,63 @@ td a:hover {
     font-weight: 600;
     font-size: 0.9rem;
 }
+
+/* Insights Section Styles */
+.insights-section {
+    margin-top: 15px;
+}
+
+.insights-group {
+    margin-bottom: 20px;
+}
+
+.insights-subtitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.insights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.insights-list-item {
+    position: relative;
+    padding: 10px 15px 10px 30px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    line-height: 1.5;
+    border-left: 3px solid #667eea;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.insights-list-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.insights-list-item::before {
+    content: "✓";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #38ef7d;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.no-insights-msg {
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 10px;
+}

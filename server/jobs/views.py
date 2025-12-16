@@ -287,6 +287,7 @@ def get_jobs(request):
         JobApplication.objects.annotate(status_priority=STATUS_ORDER)
         .order_by("status_priority", "-created_at")
         .prefetch_related("steps")
+        .prefetch_related("workflows")
     )
 
     jobs_data = []
@@ -299,6 +300,20 @@ def get_jobs(request):
             }
             for step in job.steps.all()
         ]
+        job_workflows = []
+        workflows = job.workflows.all().filter(workflow_name="extract_role_details")
+        for workflow in workflows:
+            role_details = workflow.parseOutput()
+            for role_detail in role_details:
+                if role_detail["job_id"] == job.id:
+                    job_workflows.append({
+                        "workflow_name": workflow.workflow_name,
+                        "responsibilities": role_detail["responsibilities"],
+                        "requirements": role_detail["requirements"],
+                    })
+            
+
+
         jobs_data.append(
             {
                 "id": job.id,
@@ -317,6 +332,7 @@ def get_jobs(request):
                 .replace("AM", "a.m.")
                 .replace("PM", "p.m."),
                 "steps": steps,
+                "workflows": job_workflows,
             }
         )
 

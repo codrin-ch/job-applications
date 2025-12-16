@@ -1,3 +1,4 @@
+import json
 from django.db import models
 
 STATUS_CHOICES = [
@@ -29,6 +30,9 @@ class JobApplication(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    workflows = models.ManyToManyField(
+        "Workflow", related_name="job_applications", blank=True
+    )
 
 
 class Step(models.Model):
@@ -60,3 +64,6 @@ class Workflow(models.Model):
     agent_model = models.CharField(max_length=200)
     output = models.TextField()
     parameters = models.TextField()
+
+    def parseOutput(self):
+        return json.loads(self.output)
