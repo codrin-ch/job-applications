@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"data-analyzer/agent"
-	"data-analyzer/agent/workflows"
 	"data-analyzer/config"
 	"data-analyzer/db"
+	"data-analyzer/models"
+	"data-analyzer/scenarios"
 )
 
 func main() {
@@ -17,8 +16,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-
-	ctx := context.Background()
 
 	// Connect to the database
 	database, err := db.New(cfg.DBPath)
@@ -31,73 +28,92 @@ func main() {
 	fmt.Println(strings.Repeat("=", 60))
 
 	// Get all job applications
-	fmt.Println("\n📋 Recent Job Applications:")
-	fmt.Println(strings.Repeat("-", 40))
-	applications, err := database.GetAllJobApplications()
-	if err != nil {
+	jobApplicationsScenario := scenarios.NewGetAllJobApplicationsScenario(cfg, database)
+	filteredJobApplications := make([]models.JobApplication, 0)
+	if err := jobApplicationsScenario.Execute(); err != nil {
 		log.Printf("Failed to get job applications: %v", err)
 	} else {
-		// Show first 5 applications
-		limit := 1
-		if len(applications) < limit {
-			limit = len(applications)
-		}
-		for i, app := range applications[:limit] {
-			// select only first 5000 chars of job description for display
-			jobDescription := app.JobDescription
-			if len(jobDescription) > 5000 {
-				jobDescription = jobDescription[:5000] + "..."
-			}
-			fmt.Printf("%d. %s\n%s\n", i+1, app.JobTitle, jobDescription)
-		}
-		if len(applications) > limit {
-			fmt.Printf("   ... and %d more applications\n", len(applications)-limit)
-		}
-	}
-
-	fmt.Println(strings.Repeat("=", 60))
-
-	// Test Gemini tech stack extraction
-	fmt.Println("\n🤖 Testing Gemini Tech Stack Extraction:")
-	fmt.Println(strings.Repeat("-", 40))
-
-	if cfg.GeminiAPIKey == "" {
-		log.Fatal("GEMINI_API_KEY environment variable not set")
-	}
-
-	geminiClient, err := agent.NewClient(ctx, cfg)
-	if err != nil {
-		log.Fatalf("Failed to create Gemini client: %v", err)
-	}
-	defer geminiClient.Close()
-
-	if len(applications) > 0 {
-		jobApplications := applications[:5]
-		workflow := workflows.NewRedFlagsDetectionWorkflow(geminiClient, jobApplications)
-		result, err := workflow.Execute(ctx)
-		if err != nil {
-			log.Printf("Failed to execute workflow: %v", err)
-		} else if len(result.Results) > 0 {
-			// Go through all results and display them
-			for i, r := range result.Results {
-				if r.Error != nil {
-					log.Printf("Failed to detect red flags: %v", r.Error)
-				} else {
-					// display the red flags with category and description
-					fmt.Printf("%d. %s\n", i+1, jobApplications[i].JobTitle)
-					if len(r.RedFlags) == 0 {
-						fmt.Println("🚩 Red Flags: None detected")
-					} else {
-						fmt.Println("🚩 Red Flags:")
-						for _, flag := range r.RedFlags {
-							fmt.Printf("   - [%s] %s\n", flag.Category, flag.Description)
-						}
-					}
-				}
+		// filter job applications by job title, take all that do not contaon "Lead" or "Manager" or "Data"
+		jobApplications := jobApplicationsScenario.JobApplications
+		for _, jobApplication := range jobApplications {
+			if !strings.Contains(jobApplication.JobTitle, "Lead") &&
+				!strings.Contains(jobApplication.JobTitle, "Manager") &&
+				!strings.Contains(jobApplication.JobTitle, "Data") {
+				filteredJobApplications = append(filteredJobApplications, jobApplication)
 			}
 		}
+		// print the filtered job applications
+		fmt.Println("\nFiltered Job Applications:")
+		fmt.Println(strings.Repeat("-", 40))
+		for _, jobApplication := range filteredJobApplications {
+			fmt.Printf("Job Title: %s\n", jobApplication.JobTitle)
+			fmt.Println(strings.Repeat("-", 40))
+		}
 	}
+
+	// Test Gemini role responsibilities extraction
+	// fmt.Println("\n🤖 Testing Gemini Role Responsibilities Extraction:")
+	// fmt.Println(strings.Repeat("-", 40))
+
+	// geminiClient, err := agent.NewClient(ctx, cfg)
+	// if err != nil {
+	// 	log.Fatalf("Failed to create Gemini client: %v", err)
+	// }
+	// defer geminiClient.Close()
+	// ctx := context.Background()
+	// execute extract role details scenario
+	// extractRoleDetailsScenario := scenarios.NewExtractRoleDetailsScenario(geminiClient, database, filteredJobApplications)
+	// if err := extractRoleDetailsScenario.Execute(ctx); err != nil {
+	// 	log.Printf("Failed to execute extract role details scenario: %v", err)
+	// }
+
+	// Create a new runner for the specific task which would get only the client, db connection and job applications
+
+	// Run the task which would store all the relevant workflow data in database and also run the task
+
+	// If error, log it and return
+
+	// If success, return workflowId and get it from database and display it
+
+	// if len(jobApplicationsScenario.JobApplications) > 0 {
+	// 	jobApplications := jobApplicationsScenario.JobApplications[:5]
+
+	// 	// Create workflow runner with database persistence
+	// 	runner := workflows.NewWorkflowRunnerV2(workflows.NewRedFlagsDetectionWorkflow(geminiClient, jobApplications), geminiClient, database)
+	// 	runResult, err := runner.Run(ctx)
+	// 	if err != nil {
+	// 		log.Printf("Failed to execute workflow: %v", err)
+	// 	} else {
+	// 		fmt.Printf("📝 Workflow stored with ID: %d\n", runResult.WorkflowID)
+
+	// 		// Go through all results and display them
+	// 		for i, r := range runResult.Result.Results {
+	// 			if r.Error != nil {
+	// 				log.Printf("Failed to detect red flags: %v", r.Error)
+	// 			} else {
+	// 				// display the red flags with category and description
+	// 				fmt.Printf("%d. %s\n", i+1, jobApplications[i].JobTitle)
+	// 				if len(r.RedFlags) == 0 {
+	// 					fmt.Println("🚩 Red Flags: None detected")
+	// 				} else {
+	// 					fmt.Println("🚩 Red Flags:")
+	// 					for _, flag := range r.RedFlags {
+	// 						fmt.Printf("   - [%s] %s\n", flag.Category, flag.Description)
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("✅ Test completed successfully!")
+
+	// Get all workflows
+	workflowsScenario := scenarios.NewGetAllWorkflowsScenario(cfg, database)
+	if err := workflowsScenario.Execute(); err != nil {
+		log.Printf("Failed to get workflows: %v", err)
+	} else {
+		workflowsScenario.PrintWorkflows(5)
+	}
 }

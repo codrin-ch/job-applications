@@ -68,31 +68,10 @@ func (w *RedFlagsDetectionWorkflow) Execute(ctx context.Context) (RedFlagsDetect
 		jobsBuilder.WriteString(fmt.Sprintf("\n--- JOB ID: %d ---\nTitle: %s\n\n%s\n", job.ID, job.JobTitle, sanitized))
 	}
 
-	prompt := fmt.Sprintf(`Analyze the following job descriptions and identify any red flags that might indicate potential issues with each position or company.
-
-Look for red flags in these categories:
-- UNREALISTIC_EXPECTATIONS: Requiring excessive years of experience for entry/mid-level roles, expecting expertise in too many technologies
-- POOR_WORK_LIFE_BALANCE: Phrases like "fast-paced environment", "wear many hats", "startup mentality", "flexible hours" (often meaning long hours)
-- COMPENSATION_ISSUES: Vague or missing salary information, "competitive salary" without details, unpaid overtime expectations
-- HIGH_TURNOVER: Frequently hiring for same role, "immediate start" urgency
-- TOXIC_CULTURE: Emphasis on "family" culture, "drama-free", "thick skin required"
-- UNREASONABLE_REQUIREMENTS: Expecting senior skills at junior pay, requiring unpaid trial work
-
-Return your response as a JSON array where each element contains the job_id and its red_flags.
-If a job has no red flags, include an empty red_flags array for that job.
-
-Example response format:
-[
-  {"job_id": 1, "red_flags": [{"category": "UNREALISTIC_EXPECTATIONS", "description": "Requires 10+ years experience"}]},
-  {"job_id": 2, "red_flags": []}
-]
-
-Job Descriptions:
-%s`, jobsBuilder.String())
+	prompt := fmt.Sprintf(`%s %s`, w.PROMT(), jobsBuilder.String())
 
 	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
-		// Return error for all jobs
 		return w.errorResult(fmt.Errorf("failed to generate content: %w", err)), nil
 	}
 
@@ -150,6 +129,29 @@ func (w *RedFlagsDetectionWorkflow) mapResults(jobRedFlags []JobRedFlags) RedFla
 		}
 	}
 	return RedFlagsDetectionResult{Results: results}
+}
+
+func (w *RedFlagsDetectionWorkflow) PROMT() string {
+	return `Analyze the following job descriptions and identify any red flags that might indicate potential issues with each position or company.
+
+	Look for red flags in these categories:
+	- UNREALISTIC_EXPECTATIONS: Requiring excessive years of experience for entry/mid-level roles, expecting expertise in too many technologies
+	- POOR_WORK_LIFE_BALANCE: Phrases like "fast-paced environment", "wear many hats", "startup mentality", "flexible hours" (often meaning long hours)
+	- COMPENSATION_ISSUES: Vague or missing salary information, "competitive salary" without details, unpaid overtime expectations
+	- HIGH_TURNOVER: Frequently hiring for same role, "immediate start" urgency
+	- TOXIC_CULTURE: Emphasis on "family" culture, "drama-free", "thick skin required"
+	- UNREASONABLE_REQUIREMENTS: Expecting senior skills at junior pay, requiring unpaid trial work
+
+	Return your response as a JSON array where each element contains the job_id and its red_flags.
+	If a job has no red flags, include an empty red_flags array for that job.
+
+	Example response format:
+	[
+		{"job_id": 1, "red_flags": [{"category": "UNREALISTIC_EXPECTATIONS", "description": "Requires 10+ years experience"}]},
+		{"job_id": 2, "red_flags": []}
+	]
+
+	Job Descriptions:`
 }
 
 // parseBatchRedFlags parses the batch JSON response

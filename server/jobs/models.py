@@ -50,3 +50,13 @@ class JobBoard(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Workflow(models.Model):
+    workflow_id = models.AutoField(primary_key=True)
+    workflow_name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    prompt = models.TextField()
+    agent_model = models.CharField(max_length=200)
+    output = models.TextField()
+    parameters = models.TextField()
