@@ -207,6 +207,10 @@ td a:hover {
     color: #2c3e50;
 }
 
+.status-preparing-application {
+    background: linear-gradient(135deg, #9b27b0 0%, #9c27b0 100%);
+}
+
 .status-applied {
     background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
 }
