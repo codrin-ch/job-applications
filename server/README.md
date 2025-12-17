@@ -119,6 +119,18 @@ The server exposes the following JSON endpoints:
   - Updates an existing work achievement.
   - Body: `{ description }`
 
+### Research Data
+
+- **`POST /add_research_data/<int:job_id>/`**
+  - Adds research data to a job application.
+  - Body: `{ category, info }` where category is 1=Responsibility, 2=Requirement, 3=Company Research, 4=Role Research
+
+- **`PUT /update_research_data/<int:research_data_id>/`**
+  - Updates existing research data.
+  - Body: `{ category?, info? }` (at least one required)
+
+> **Note:** `GET /api/jobs/` now includes a `research_data` array for each job.
+
 ## Linting
 
 This project uses `black` for code formatting and `ruff` for linting.

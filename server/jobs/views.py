@@ -5,6 +5,7 @@ from django.db.models.functions import TruncDate
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import (
@@ -12,6 +13,7 @@ from .models import (
     STATUS_CHOICES,
     JobApplication,
     JobBoard,
+    ResearchData,
     Step,
     WorkAchievement,
     WorkExperience,
@@ -296,6 +298,7 @@ def get_jobs(request):
         .order_by("status_priority", "-created_at")
         .prefetch_related("steps")
         .prefetch_related("workflows")
+        .prefetch_related("research_data")
     )
 
     jobs_data = []
@@ -314,13 +317,13 @@ def get_jobs(request):
             role_details = workflow.parseOutput()
             for role_detail in role_details:
                 if role_detail["job_id"] == job.id:
-                    job_workflows.append({
-                        "workflow_name": workflow.workflow_name,
-                        "responsibilities": role_detail["responsibilities"],
-                        "requirements": role_detail["requirements"],
-                    })
-            
-
+                    job_workflows.append(
+                        {
+                            "workflow_name": workflow.workflow_name,
+                            "responsibilities": role_detail["responsibilities"],
+                            "requirements": role_detail["requirements"],
+                        }
+                    )
 
         jobs_data.append(
             {
@@ -341,6 +344,14 @@ def get_jobs(request):
                 .replace("PM", "p.m."),
                 "steps": steps,
                 "workflows": job_workflows,
+                "research_data": [
+                    {
+                        "id": rd.id,
+                        "category": rd.category,
+                        "info": rd.info,
+                    }
+                    for rd in job.research_data.all()
+                ],
             }
         )
 
@@ -492,3 +503,75 @@ def update_work_achievement(request, achievement_id):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
 
+
+# Research Data Views
+
+
+@csrf_exempt
+@require_POST
+def add_research_data(request, job_id):
+    try:
+        data = json.loads(request.body)
+        category = data.get("category")
+        info = data.get("info")
+
+        if category is None or not info:
+            return JsonResponse(
+                {"success": False, "error": "Category and info are required"},
+                status=400,
+            )
+
+        job = get_object_or_404(JobApplication, pk=job_id)
+        research_data = ResearchData.objects.create(
+            job_application=job, category=category, info=info
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "research_data": {
+                    "id": research_data.id,
+                    "category": research_data.category,
+                    "info": research_data.info,
+                },
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["PUT"])
+def update_research_data(request, research_data_id):
+    try:
+        data = json.loads(request.body)
+        category = data.get("category")
+        info = data.get("info")
+
+        if category is None and not info:
+            return JsonResponse(
+                {"success": False, "error": "Category or info is required"},
+                status=400,
+            )
+
+        research_data = get_object_or_404(ResearchData, pk=research_data_id)
+
+        if category is not None:
+            research_data.category = category
+        if info:
+            research_data.info = info
+
+        research_data.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "research_data": {
+                    "id": research_data.id,
+                    "category": research_data.category,
+                    "info": research_data.info,
+                },
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
