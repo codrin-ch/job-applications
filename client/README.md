@@ -38,7 +38,10 @@ This is the React-based frontend for the Job Applications Tracker application.
 ## Project Structure
 
 - `src/`: Main source directory.
-    - `components/`: React components (JobApplications, JobBoards, etc.).
+    - `components/`: React components.
+        - `job-application/`: Job application components (JobApplications, AddJobModal, JobDetailsModal, etc.).
+        - `work-experience/`: Work experience components (WorkExperience, WorkExperienceSection, AddWorkExperienceModal).
+        - `JobBoards.tsx`: Job boards tracker component.
     - `utils/`: Utility functions (CSRF handling).
     - `App.tsx`: Main application component and routing.
     - `main.tsx`: Entry point.
@@ -68,6 +71,11 @@ The client provides a modern, responsive user interface mirroring the server-sid
 ### Job Boards Tracker
 - **Board Management:** Add and track various job boards.
 - **Daily Visit Tracking:** Track daily visits to ensure consistent sourcing habits. Links update "Last Visited" timestamp automatically.
+
+### Work Experience Management
+- **Experience Tracking:** Add and manage work experience entries with job title, company, dates.
+- **Achievements:** Add achievements to each work experience with inline editing.
+- **Auto-Save:** Achievement updates are automatically saved with debouncing.
 
 ### Workflow Customization
 - **Status Filtering:** Detailed filter dropdown to view specific subsets of applications.
