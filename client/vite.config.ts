@@ -18,6 +18,9 @@ export default defineConfig({
       '/add_job': 'http://localhost:8000',
       '/add_step': 'http://localhost:8000',
       '/update_job_field': 'http://localhost:8000',
+      '/add_work_experience': 'http://localhost:8000',
+      '/add_work_achievement': 'http://localhost:8000',
+      '/update_work_achievement': 'http://localhost:8000',
     }
   }
 })

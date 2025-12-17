@@ -167,6 +167,7 @@ export const JobBoards = () => {
                 <div className="nav-links">
                     <Link to="/" className="nav-link">Job Applications</Link>
                     <Link to="/job-boards" className="nav-link active">Job Boards</Link>
+                    <Link to="/work-experience" className="nav-link">Work Experience</Link>
                 </div>
 
                 <button className="add-board-btn" onClick={() => setIsModalOpen(true)}>+ Add Job Board</button>

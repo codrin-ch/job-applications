@@ -67,3 +67,18 @@ class Workflow(models.Model):
 
     def parseOutput(self):
         return json.loads(self.output)
+
+class WorkExperience(models.Model):
+    job_title = models.CharField(max_length=100)
+    company_name = models.CharField(max_length=100)
+    company_url = models.URLField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class WorkAchievement(models.Model):
+    work_experience = models.ForeignKey(WorkExperience, on_delete=models.CASCADE, related_name="work_achievements")
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -18,4 +18,22 @@ urlpatterns = [
     ),
     path("api/job-boards/", views.get_job_boards, name="get_job_boards"),
     path("api/jobs/", views.get_jobs, name="get_jobs"),
+    # Work Experience URLs
+    path(
+        "api/work-experiences/",
+        views.get_work_experiences,
+        name="get_work_experiences",
+    ),
+    path("add_work_experience/", views.add_work_experience, name="add_work_experience"),
+    path(
+        "add_work_achievement/<int:experience_id>/",
+        views.add_work_achievement,
+        name="add_work_achievement",
+    ),
+    path(
+        "update_work_achievement/<int:achievement_id>/",
+        views.update_work_achievement,
+        name="update_work_achievement",
+    ),
 ]
+

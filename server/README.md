@@ -102,6 +102,23 @@ The server exposes the following JSON endpoints:
 - **`PUT /update_last_visited/<int:board_id>/`**
   - Updates the `last_visited` timestamp for a job board to now.
 
+### Work Experience
+
+- **`GET /api/work-experiences/`**
+  - Returns all work experiences with their achievements as a nested array.
+
+- **`POST /add_work_experience/`**
+  - Creates a new work experience.
+  - Body: `{ job_title, company_name, company_url, start_date, end_date }`
+
+- **`POST /add_work_achievement/<int:experience_id>/`**
+  - Adds a new achievement to a work experience.
+  - Body: `{ description }`
+
+- **`PUT /update_work_achievement/<int:achievement_id>/`**
+  - Updates an existing work achievement.
+  - Body: `{ description }`
+
 ## Linting
 
 This project uses `black` for code formatting and `ruff` for linting.

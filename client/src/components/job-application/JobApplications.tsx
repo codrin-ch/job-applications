@@ -135,6 +135,7 @@ export const JobApplications = () => {
                 <div className="nav-links">
                     <Link to="/" className="nav-link active">Job Applications</Link>
                     <Link to="/job-boards" className="nav-link">Job Boards</Link>
+                    <Link to="/work-experience" className="nav-link">Work Experience</Link>
                 </div>
 
                 <div className="button-row">
