@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Job, ResearchData } from '../../types';
 import { ReadMore } from './ReadMore';
 import { JobDeepDive } from './JobDeepDive';
 import { getCookie } from '../../utils/csrf';
+import '../cover-letter/CoverLetter.css';
 
 interface JobDetailsModalProps {
     job: Job | null;
@@ -13,6 +15,7 @@ interface JobDetailsModalProps {
 }
 
 export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, onClose, onJobUpdate, onAddStep }) => {
+    const navigate = useNavigate();
     const [isEditingSalary, setIsEditingSalary] = useState(false);
     const [salaryValue, setSalaryValue] = useState('');
 
@@ -119,6 +122,29 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                         <div className="detail-value" style={{ whiteSpace: 'pre-wrap' }}>
                             <ReadMore text={job.job_description} maxLength={200} />
                         </div>
+                    </div>
+
+                    {/* Cover Letter Section */}
+                    <div className="detail-item full-width">
+                        <div className="detail-label">Cover Letter</div>
+                        {job.workflows && job.workflows.find(w => w.workflow_name === 'generate_cover_letter') ? (
+                            <div className="cover-letter-content" style={{ whiteSpace: 'pre-wrap' }}>
+                                {(job.workflows.find(w => w.workflow_name === 'generate_cover_letter') as { cover_letter: string })?.cover_letter}
+                            </div>
+                        ) : (
+                            <div className="cover-letter-actions">
+                                <button
+                                    className="prepare-cover-letter-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onClose();
+                                        navigate(`/${job.id}/cover-letter`, { state: { job } });
+                                    }}
+                                >
+                                    Prepare Cover Letter
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="detail-item full-width">

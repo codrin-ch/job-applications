@@ -27,8 +27,13 @@ export interface ExtractRoleDetailsWorkflow {
     requirements: string[];
 }
 
+export interface GenerateCoverLetterWorkflow {
+    workflow_name: 'generate_cover_letter';
+    cover_letter: string;
+}
+
 // Union type for all workflow types - extend as new workflow types are added
-export type Workflow = ExtractRoleDetailsWorkflow;
+export type Workflow = ExtractRoleDetailsWorkflow | GenerateCoverLetterWorkflow;
 
 export interface Job {
     id: number;
