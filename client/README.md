@@ -65,6 +65,7 @@ The client provides a modern, responsive user interface mirroring the server-sid
     - **Inline Status Updates:** Change application status directly from the list view.
 - **Detailed View:** Click any application to see full details in a modal.
     - **Activity Steps:** Track specific interaction steps (e.g., "Screening Call").
+    - **Deep Dive:** Research data organized by category (Responsibilities, Requirements, Company Research, Role Research) with inline editing and auto-save.
     - **Editable Fields:** Inline editing for Salary.
     - **Rich Text:** "Read more" functionality for long descriptions.
 
