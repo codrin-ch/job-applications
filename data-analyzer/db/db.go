@@ -60,3 +60,48 @@ func (db *DB) GetAllJobApplications() ([]models.JobApplication, error) {
 
 	return applications, nil
 }
+
+// InsertWorkflow inserts a new workflow record into the database
+func (db *DB) InsertWorkflow(workflow models.Workflow) (int64, error) {
+	result, err := db.conn.Exec(`
+		INSERT INTO jobs_workflow (workflow_name, prompt, agent_model, output, parameters, created_at)
+		VALUES (?, ?, ?, ?, ?, datetime('now'))
+	`, workflow.WorkflowName, workflow.Prompt, workflow.AgentModel, workflow.Output, workflow.Parameters)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert workflow: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get last insert id: %w", err)
+	}
+
+	return id, nil
+}
+
+// GetAllWorkflows retrieves all workflow records from the database
+func (db *DB) GetAllWorkflows() ([]models.Workflow, error) {
+	rows, err := db.conn.Query(`
+		SELECT workflow_id, workflow_name, created_at, prompt, agent_model, output, parameters
+		FROM jobs_workflow
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query workflows: %w", err)
+	}
+	defer rows.Close()
+
+	var workflows []models.Workflow
+	for rows.Next() {
+		var w models.Workflow
+		err := rows.Scan(
+			&w.ID, &w.WorkflowName, &w.CreatedAt, &w.Prompt, &w.AgentModel, &w.Output, &w.Parameters,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan workflow row: %w", err)
+		}
+		workflows = append(workflows, w)
+	}
+
+	return workflows, nil
+}

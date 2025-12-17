@@ -7,7 +7,15 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .models import SOURCE_CHOICES, STATUS_CHOICES, JobApplication, JobBoard, Step
+from .models import (
+    SOURCE_CHOICES,
+    STATUS_CHOICES,
+    JobApplication,
+    JobBoard,
+    Step,
+    WorkAchievement,
+    WorkExperience,
+)
 
 DAILY_GOAL = 5
 STATUS_ORDER = Case(
@@ -287,6 +295,7 @@ def get_jobs(request):
         JobApplication.objects.annotate(status_priority=STATUS_ORDER)
         .order_by("status_priority", "-created_at")
         .prefetch_related("steps")
+        .prefetch_related("workflows")
     )
 
     jobs_data = []
@@ -299,6 +308,20 @@ def get_jobs(request):
             }
             for step in job.steps.all()
         ]
+        job_workflows = []
+        workflows = job.workflows.all().filter(workflow_name="extract_role_details")
+        for workflow in workflows:
+            role_details = workflow.parseOutput()
+            for role_detail in role_details:
+                if role_detail["job_id"] == job.id:
+                    job_workflows.append({
+                        "workflow_name": workflow.workflow_name,
+                        "responsibilities": role_detail["responsibilities"],
+                        "requirements": role_detail["requirements"],
+                    })
+            
+
+
         jobs_data.append(
             {
                 "id": job.id,
@@ -317,6 +340,7 @@ def get_jobs(request):
                 .replace("AM", "a.m.")
                 .replace("PM", "p.m."),
                 "steps": steps,
+                "workflows": job_workflows,
             }
         )
 
@@ -333,3 +357,138 @@ def get_jobs(request):
             ],  # Just sending codes for now, or full tuples if needed
         }
     )
+
+
+# Work Experience Views
+
+
+def get_work_experiences(request):
+    work_experiences = WorkExperience.objects.order_by("-start_date").prefetch_related(
+        "work_achievements"
+    )
+
+    data = []
+    for experience in work_experiences:
+        achievements = [
+            {
+                "id": achievement.id,
+                "description": achievement.description,
+            }
+            for achievement in experience.work_achievements.all()
+        ]
+
+        data.append(
+            {
+                "id": experience.id,
+                "job_title": experience.job_title,
+                "company_name": experience.company_name,
+                "company_url": experience.company_url,
+                "start_date": experience.start_date,
+                "end_date": experience.end_date,
+                "work_achievements": achievements,
+            }
+        )
+
+    return JsonResponse({"work_experiences": data})
+
+
+@require_POST
+def add_work_experience(request):
+    try:
+        data = json.loads(request.body)
+        job_title = data.get("job_title")
+        company_name = data.get("company_name")
+        company_url = data.get("company_url")
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+
+        if not all([job_title, company_name, company_url, start_date, end_date]):
+            return JsonResponse(
+                {"success": False, "error": "All fields are required"},
+                status=400,
+            )
+
+        work_experience = WorkExperience.objects.create(
+            job_title=job_title,
+            company_name=company_name,
+            company_url=company_url,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "work_experience": {
+                    "id": work_experience.id,
+                    "job_title": work_experience.job_title,
+                    "company_name": work_experience.company_name,
+                    "company_url": work_experience.company_url,
+                    "start_date": work_experience.start_date,
+                    "end_date": work_experience.end_date,
+                    "work_achievements": [],
+                },
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+@require_POST
+def add_work_achievement(request, experience_id):
+    try:
+        data = json.loads(request.body)
+        description = data.get("description")
+
+        if not description:
+            return JsonResponse(
+                {"success": False, "error": "Description is required"},
+                status=400,
+            )
+
+        work_experience = get_object_or_404(WorkExperience, pk=experience_id)
+        achievement = WorkAchievement.objects.create(
+            work_experience=work_experience, description=description
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "work_achievement": {
+                    "id": achievement.id,
+                    "description": achievement.description,
+                },
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+
+@require_http_methods(["PUT"])
+def update_work_achievement(request, achievement_id):
+    try:
+        data = json.loads(request.body)
+        description = data.get("description")
+
+        if not description:
+            return JsonResponse(
+                {"success": False, "error": "Description is required"},
+                status=400,
+            )
+
+        achievement = get_object_or_404(WorkAchievement, pk=achievement_id)
+        achievement.description = description
+        achievement.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "work_achievement": {
+                    "id": achievement.id,
+                    "description": achievement.description,
+                },
+            }
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+

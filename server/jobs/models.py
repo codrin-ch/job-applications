@@ -1,3 +1,4 @@
+import json
 from django.db import models
 
 STATUS_CHOICES = [
@@ -29,6 +30,9 @@ class JobApplication(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    workflows = models.ManyToManyField(
+        "Workflow", related_name="job_applications", blank=True
+    )
 
 
 class Step(models.Model):
@@ -50,3 +54,31 @@ class JobBoard(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Workflow(models.Model):
+    workflow_id = models.AutoField(primary_key=True)
+    workflow_name = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    prompt = models.TextField()
+    agent_model = models.CharField(max_length=200)
+    output = models.TextField()
+    parameters = models.TextField()
+
+    def parseOutput(self):
+        return json.loads(self.output)
+
+class WorkExperience(models.Model):
+    job_title = models.CharField(max_length=100)
+    company_name = models.CharField(max_length=100)
+    company_url = models.URLField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class WorkAchievement(models.Model):
+    work_experience = models.ForeignKey(WorkExperience, on_delete=models.CASCADE, related_name="work_achievements")
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

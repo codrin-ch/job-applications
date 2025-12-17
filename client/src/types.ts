@@ -4,6 +4,16 @@ export interface Step {
     created_at: string;
 }
 
+// Workflow types
+export interface ExtractRoleDetailsWorkflow {
+    workflow_name: 'extract_role_details';
+    responsibilities: string[];
+    requirements: string[];
+}
+
+// Union type for all workflow types - extend as new workflow types are added
+export type Workflow = ExtractRoleDetailsWorkflow;
+
 export interface Job {
     id: number;
     job_title: string;
@@ -17,6 +27,7 @@ export interface Job {
     created_at: string;
     updated_at: string;
     steps: Step[];
+    workflows: Workflow[];
 }
 
 export interface StatusSummary {

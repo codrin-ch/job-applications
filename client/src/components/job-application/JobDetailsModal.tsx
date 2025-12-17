@@ -148,6 +148,41 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                             <p className="no-steps-msg">No steps recorded for this application.</p>
                         )}
                     </div>
+
+                    {/* Insights Section */}
+                    <div className="detail-item full-width">
+                        <div className="detail-label">Insights</div>
+                        {job.workflows && job.workflows.length > 0 ? (
+                            job.workflows
+                                .filter(w => w.workflow_name === 'extract_role_details')
+                                .map((workflow, idx) => (
+                                    <div key={idx} className="insights-section">
+                                        {workflow.responsibilities && workflow.responsibilities.length > 0 && (
+                                            <div className="insights-group">
+                                                <div className="insights-subtitle">Responsibilities</div>
+                                                <ul className="insights-list">
+                                                    {workflow.responsibilities.map((item, i) => (
+                                                        <li key={i} className="insights-list-item">{item}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {workflow.requirements && workflow.requirements.length > 0 && (
+                                            <div className="insights-group">
+                                                <div className="insights-subtitle">Requirements</div>
+                                                <ul className="insights-list">
+                                                    {workflow.requirements.map((item, i) => (
+                                                        <li key={i} className="insights-list-item">{item}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                        ) : (
+                            <p className="no-insights-msg">No insights available for this application.</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
