@@ -28,6 +28,7 @@ Create a `.env` file in the `data-analyzer` directory with the following variabl
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
+SHOULD_RUN_AGENT=true
 DB_PATH=../server/db.sqlite3
 ```
 
@@ -35,6 +36,7 @@ DB_PATH=../server/db.sqlite3
 |----------|-------------|---------|
 | `GEMINI_API_KEY` | Your Google Gemini API key (required) | - |
 | `GEMINI_MODEL` | The Gemini model to use | - |
+| `SHOULD_RUN_AGENT` | Set to `true` to enable AI agent execution | `false` |
 | `DB_PATH` | Path to the SQLite database | `../server/db.sqlite3` |
 
 ## Running the Analyzer
@@ -52,15 +54,15 @@ DB_PATH=../server/db.sqlite3
     ./data-analyzer
     ```
 
-*Note: Ensure the Django server's database (`db.sqlite3`) exists and contains job applications.*
 
 ## Project Structure
 
 - `agent/`: Gemini AI client wrapper and utilities.
-    - `workflows/`: AI-powered analysis workflows.
+    - `workflows/`: AI-powered analysis workflows definition.
 - `config/`: Application configuration (environment variables).
 - `db/`: Database connection and queries.
-- `models/`: Data models (JobApplication).
+- `models/`: Data models (JobApplication, Workflow).
+- `scenarios/`: High-level execution scripts combining workflows and database operations.
 - `main.go`: Entry point and workflow orchestration.
 
 ## Available Workflows
@@ -96,6 +98,16 @@ Identifies potential issues in job postings that might indicate problems with a 
    - [POOR_WORK_LIFE_BALANCE] "Comfortable in a fast-moving environment" suggests high pressure
 ```
 
+### Extract Role Details
+
+Analyzes job descriptions to extract formal responsibilities and requirements, structuring them for further use (e.g., resume tailoring).
+
+**Example output:**
+```
+Responsibilities: Design and implement scalable backend services...
+Requirements: 5+ years of experience with Go, strong knowledge of distributed systems...
+```
+
 ## Architecture
 
 ```
@@ -109,9 +121,15 @@ Identifies potential issues in job postings that might indicate problems with a 
 │                            │                   │         │
 │                            ▼                   ▼         │
 │                    ┌───────────────────────────────┐     │
+│                    │           Scenarios           │     │
+│                    │      (Orchestration)          │     │
+│                    └───────────────┬───────────────┘     │
+│                                    │                     │
+│                                    ▼                     │
+│                    ┌───────────────────────────────┐     │
 │                    │         Workflows             │     │
-│                    │  • Tech Stack Extraction      │     │
 │                    │  • Red Flags Detection        │     │
+│                    │  • Extract Role Details       │     │
 │                    └───────────────────────────────┘     │
 └─────────────────────────────────────────────────────────┘
 ```
