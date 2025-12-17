@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { Job } from '../../types';
+import type { Job, ResearchData } from '../../types';
 import { ReadMore } from './ReadMore';
+import { JobDeepDive } from './JobDeepDive';
 import { getCookie } from '../../utils/csrf';
 
 interface JobDetailsModalProps {
@@ -148,6 +149,28 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                             <p className="no-steps-msg">No steps recorded for this application.</p>
                         )}
                     </div>
+
+                    {/* Deep Dive Section */}
+                    <JobDeepDive
+                        jobId={job.id}
+                        researchData={job.research_data || []}
+                        onResearchDataAdd={(rd: ResearchData) => {
+                            const updatedJob = {
+                                ...job,
+                                research_data: [...(job.research_data || []), rd]
+                            };
+                            onJobUpdate(updatedJob);
+                        }}
+                        onResearchDataUpdate={(rd: ResearchData) => {
+                            const updatedJob = {
+                                ...job,
+                                research_data: (job.research_data || []).map(item =>
+                                    item.id === rd.id ? rd : item
+                                )
+                            };
+                            onJobUpdate(updatedJob);
+                        }}
+                    />
 
                     {/* Insights Section */}
                     <div className="detail-item full-width">

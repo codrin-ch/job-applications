@@ -737,3 +737,88 @@ td a:hover {
     font-style: italic;
     margin-top: 10px;
 }
+
+/* Deep Dive Section Styles */
+.deep-dive-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+.deep-dive-category {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.deep-dive-category:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.deep-dive-category-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.deep-dive-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.deep-dive-bullet {
+    color: #667eea;
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1.8;
+}
+
+.deep-dive-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.deep-dive-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+}
+
+.deep-dive-input.saving {
+    background: #e8f4ff;
+    border-color: #667eea;
+}
+
+.add-deep-dive-btn {
+    background: rgba(102, 126, 234, 0.1);
+    border: 2px dashed #667eea;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #667eea;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.add-deep-dive-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+}

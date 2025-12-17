@@ -4,6 +4,22 @@ export interface Step {
     created_at: string;
 }
 
+// Research Data types
+export const ResearchDataCategory = {
+    RESPONSIBILITY: 1,
+    REQUIREMENT: 2,
+    COMPANY_RESEARCH: 3,
+    ROLE_RESEARCH: 4,
+} as const;
+
+export type ResearchDataCategoryType = typeof ResearchDataCategory[keyof typeof ResearchDataCategory];
+
+export interface ResearchData {
+    id: number;
+    category: ResearchDataCategoryType;
+    info: string;
+}
+
 // Workflow types
 export interface ExtractRoleDetailsWorkflow {
     workflow_name: 'extract_role_details';
@@ -28,6 +44,7 @@ export interface Job {
     updated_at: string;
     steps: Step[];
     workflows: Workflow[];
+    research_data: ResearchData[];
 }
 
 export interface StatusSummary {
