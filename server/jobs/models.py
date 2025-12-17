@@ -1,4 +1,5 @@
 import json
+
 from django.db import models
 
 STATUS_CHOICES = [
@@ -45,6 +46,23 @@ class Step(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class ResearchDataCategories(models.IntegerChoices):
+    RESPONSABILITY = 1
+    REQUIREMENT = 2
+    COMPANY_RESEARCH = 3
+    ROLE_RESEARCH = 4
+
+
+class ResearchData(models.Model):
+    job_application = models.ForeignKey(
+        JobApplication, on_delete=models.CASCADE, related_name="research_data"
+    )
+    category = models.IntegerField(choices=ResearchDataCategories.choices)
+    info = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class JobBoard(models.Model):
     name = models.CharField(max_length=100)
     url = models.URLField()
@@ -68,6 +86,7 @@ class Workflow(models.Model):
     def parseOutput(self):
         return json.loads(self.output)
 
+
 class WorkExperience(models.Model):
     job_title = models.CharField(max_length=100)
     company_name = models.CharField(max_length=100)
@@ -77,8 +96,11 @@ class WorkExperience(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
 class WorkAchievement(models.Model):
-    work_experience = models.ForeignKey(WorkExperience, on_delete=models.CASCADE, related_name="work_achievements")
+    work_experience = models.ForeignKey(
+        WorkExperience, on_delete=models.CASCADE, related_name="work_achievements"
+    )
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

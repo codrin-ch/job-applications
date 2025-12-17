@@ -21,6 +21,8 @@ export default defineConfig({
       '/add_work_experience': 'http://localhost:8000',
       '/add_work_achievement': 'http://localhost:8000',
       '/update_work_achievement': 'http://localhost:8000',
+      '/add_research_data': 'http://localhost:8000',
+      '/update_research_data': 'http://localhost:8000',
     }
   }
 })

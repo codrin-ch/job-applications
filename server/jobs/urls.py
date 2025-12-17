@@ -35,5 +35,15 @@ urlpatterns = [
         views.update_work_achievement,
         name="update_work_achievement",
     ),
+    # Research Data URLs
+    path(
+        "add_research_data/<int:job_id>/",
+        views.add_research_data,
+        name="add_research_data",
+    ),
+    path(
+        "update_research_data/<int:research_data_id>/",
+        views.update_research_data,
+        name="update_research_data",
+    ),
 ]
-
