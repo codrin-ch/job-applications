@@ -69,6 +69,10 @@ func (s *ExtractRoleDetailsScenario) Execute(ctx context.Context) error {
 		} else {
 			fmt.Printf("📝 Workflow stored with ID: %d\n", workflowID)
 		}
+		err = s.db.InsertJobApplicationsWorkflow(jobIDs, workflowID)
+		if err != nil {
+			log.Printf("Failed to store job application workflow: %v", err)
+		}
 	}
 
 	return nil

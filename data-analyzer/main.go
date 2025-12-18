@@ -7,8 +7,6 @@ import (
 
 	"data-analyzer/config"
 	"data-analyzer/db"
-	"data-analyzer/models"
-	"data-analyzer/scenarios"
 )
 
 func main() {
@@ -27,41 +25,13 @@ func main() {
 	fmt.Println("✅ Successfully connected to the SQLite database!")
 	fmt.Println(strings.Repeat("=", 60))
 
-	// Get all job applications
-	jobApplicationsScenario := scenarios.NewGetAllJobApplicationsScenario(cfg, database)
-	filteredJobApplications := make([]models.JobApplication, 0)
-	if err := jobApplicationsScenario.Execute(); err != nil {
-		log.Printf("Failed to get job applications: %v", err)
-	} else {
-		// filter job applications by job title, take all that do not contaon "Lead" or "Manager" or "Data"
-		jobApplications := jobApplicationsScenario.JobApplications
-		for _, jobApplication := range jobApplications {
-			if !strings.Contains(jobApplication.JobTitle, "Lead") &&
-				!strings.Contains(jobApplication.JobTitle, "Manager") &&
-				!strings.Contains(jobApplication.JobTitle, "Data") {
-				filteredJobApplications = append(filteredJobApplications, jobApplication)
-			}
-		}
-		// print the filtered job applications
-		fmt.Println("\nFiltered Job Applications:")
-		fmt.Println(strings.Repeat("-", 40))
-		for _, jobApplication := range filteredJobApplications {
-			fmt.Printf("Job Title: %s\n", jobApplication.JobTitle)
-			fmt.Println(strings.Repeat("-", 40))
-		}
-	}
-
-	// Test Gemini role responsibilities extraction
-	// fmt.Println("\n🤖 Testing Gemini Role Responsibilities Extraction:")
-	// fmt.Println(strings.Repeat("-", 40))
-
+	// ctx := context.Background()
 	// geminiClient, err := agent.NewClient(ctx, cfg)
 	// if err != nil {
 	// 	log.Fatalf("Failed to create Gemini client: %v", err)
 	// }
 	// defer geminiClient.Close()
-	// ctx := context.Background()
-	// execute extract role details scenario
+	// // execute extract role details scenario
 	// extractRoleDetailsScenario := scenarios.NewExtractRoleDetailsScenario(geminiClient, database, filteredJobApplications)
 	// if err := extractRoleDetailsScenario.Execute(ctx); err != nil {
 	// 	log.Printf("Failed to execute extract role details scenario: %v", err)
@@ -106,14 +76,14 @@ func main() {
 	// 	}
 	// }
 
-	fmt.Println(strings.Repeat("=", 60))
-	fmt.Println("✅ Test completed successfully!")
+	// fmt.Println(strings.Repeat("=", 60))
+	// fmt.Println("✅ Test completed successfully!")
 
-	// Get all workflows
-	workflowsScenario := scenarios.NewGetAllWorkflowsScenario(cfg, database)
-	if err := workflowsScenario.Execute(); err != nil {
-		log.Printf("Failed to get workflows: %v", err)
-	} else {
-		workflowsScenario.PrintWorkflows(5)
-	}
+	// // Get all workflows
+	// workflowsScenario := scenarios.NewGetAllWorkflowsScenario(cfg, database)
+	// if err := workflowsScenario.Execute(); err != nil {
+	// 	log.Printf("Failed to get workflows: %v", err)
+	// } else {
+	// 	workflowsScenario.PrintWorkflows(5)
+	// }
 }

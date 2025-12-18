@@ -79,6 +79,19 @@ func (db *DB) InsertWorkflow(workflow models.Workflow) (int64, error) {
 	return id, nil
 }
 
+func (db *DB) InsertJobApplicationsWorkflow(jobApplicationIDs []int, workflowID int64) error {
+	for _, jobApplicationID := range jobApplicationIDs {
+		_, err := db.conn.Exec(`
+			INSERT INTO jobs_jobapplication_workflows (jobapplication_id, workflow_id)
+			VALUES (?, ?)
+		`, jobApplicationID, workflowID)
+		if err != nil {
+			return fmt.Errorf("failed to insert job application workflow: %w", err)
+		}
+	}
+	return nil
+}
+
 // GetAllWorkflows retrieves all workflow records from the database
 func (db *DB) GetAllWorkflows() ([]models.Workflow, error) {
 	rows, err := db.conn.Query(`
