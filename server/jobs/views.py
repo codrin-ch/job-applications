@@ -52,8 +52,8 @@ def update_job_field(request, job_id):
         new_value = data.get(field_name)
         job = get_object_or_404(JobApplication, pk=job_id)
 
-        # For salary field, no validation needed (free text)
-        if field_name == "salary":
+        # For salary and cover_letter fields, no validation needed (free text)
+        if field_name in ["salary", "cover_letter"]:
             setattr(job, field_name, new_value)
             job.save()
             return JsonResponse({"success": True})
@@ -329,11 +329,10 @@ def get_jobs(request):
                             }
                         )
             elif workflow.workflow_name == "generate_cover_letter":
-                cover_letter = workflow.parseOutput()
                 job_workflows.append(
                     {
                         "workflow_name": workflow.workflow_name,
-                        "cover_letter": cover_letter,
+                        "cover_letter": workflow.output,
                     }
                 )
 
@@ -356,6 +355,7 @@ def get_jobs(request):
                 .replace("PM", "p.m."),
                 "steps": steps,
                 "workflows": job_workflows,
+                "cover_letter": job.cover_letter,
                 "research_data": [
                     {
                         "id": rd.id,

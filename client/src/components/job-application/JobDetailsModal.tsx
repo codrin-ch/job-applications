@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Job, ResearchData } from '../../types';
+import { Job, type ResearchData } from '../../types';
 import { ReadMore } from './ReadMore';
 import { JobDeepDive } from './JobDeepDive';
 import { getCookie } from '../../utils/csrf';
 import '../cover-letter/CoverLetter.css';
+import './JobDetailsModal.css';
+
 
 interface JobDetailsModalProps {
     job: Job | null;
@@ -18,6 +20,17 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
     const navigate = useNavigate();
     const [isEditingSalary, setIsEditingSalary] = useState(false);
     const [salaryValue, setSalaryValue] = useState('');
+    const [isCopied, setIsCopied] = useState(false);
+
+    const handleCopyCoverLetter = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    };
 
     if (!isOpen || !job) return null;
 
@@ -34,7 +47,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const updatedJob = { ...job, salary: salaryValue };
+                    const updatedJob = new Job({ ...job, salary: salaryValue });
                     onJobUpdate(updatedJob);
                     setIsEditingSalary(false);
                 } else {
@@ -126,11 +139,49 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
 
                     {/* Cover Letter Section */}
                     <div className="detail-item full-width">
-                        <div className="detail-label">Cover Letter</div>
-                        {job.workflows && job.workflows.find(w => w.workflow_name === 'generate_cover_letter') ? (
-                            <div className="cover-letter-content" style={{ whiteSpace: 'pre-wrap' }}>
-                                {(job.workflows.find(w => w.workflow_name === 'generate_cover_letter') as { cover_letter: string })?.cover_letter}
-                            </div>
+                        <div className="detail-label detail-label-with-actions">
+                            Cover Letter
+                            {job.getCoverLetter() && (
+                                <button
+                                    className="copy-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const coverLetter = job.getCoverLetter();
+                                        if (coverLetter) handleCopyCoverLetter(coverLetter);
+                                    }}
+                                    title={isCopied ? 'Copied!' : 'Copy to clipboard'}
+                                >
+                                    {isCopied ? (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    ) : (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+                        {job.getCoverLetter() ? (
+                            <>
+                                <div className="cover-letter-content" style={{ whiteSpace: 'pre-wrap' }}>
+                                    <ReadMore text={job.getCoverLetter()} maxLength={200} />
+                                </div>
+                                <div className="cover-letter-actions" style={{ marginTop: '12px' }}>
+                                    <button
+                                        className="prepare-cover-letter-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onClose();
+                                            navigate(`/${job.id}/edit-cover-letter`, { state: { job } });
+                                        }}
+                                    >
+                                        Edit Cover Letter
+                                    </button>
+                                </div>
+                            </>
                         ) : (
                             <div className="cover-letter-actions">
                                 <button
@@ -181,19 +232,19 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                         jobId={job.id}
                         researchData={job.research_data || []}
                         onResearchDataAdd={(rd: ResearchData) => {
-                            const updatedJob = {
+                            const updatedJob = new Job({
                                 ...job,
                                 research_data: [...(job.research_data || []), rd]
-                            };
+                            });
                             onJobUpdate(updatedJob);
                         }}
                         onResearchDataUpdate={(rd: ResearchData) => {
-                            const updatedJob = {
+                            const updatedJob = new Job({
                                 ...job,
                                 research_data: (job.research_data || []).map(item =>
                                     item.id === rd.id ? rd : item
                                 )
-                            };
+                            });
                             onJobUpdate(updatedJob);
                         }}
                     />

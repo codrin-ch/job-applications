@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import type { Job, ResearchDataCategoryType, ResearchData } from '../../types';
+import { Job, type ResearchDataCategoryType, type ResearchData } from '../../types';
 import { ResearchDataCategory } from '../../types';
 import type { WorkExperience as WorkExperienceType, WorkAchievement } from '../work-experience/types';
 import './CoverLetter.css';
+import { getCookie } from '../../utils/csrf';
 
 const CATEGORY_LABELS: Record<ResearchDataCategoryType, string> = {
     [ResearchDataCategory.RESPONSIBILITY]: 'Responsibilities',
@@ -29,7 +30,9 @@ type InsightItem = { key: string; text: string; field: 'responsibilities' | 'req
 export const CoverLetter = () => {
     const { job_id } = useParams<{ job_id: string }>();
     const location = useLocation();
-    const job = location.state?.job as Job | undefined;
+    // Convert plain object back to Job instance (location.state serializes objects)
+    const jobData = location.state?.job;
+    const job = jobData ? new Job(jobData) : undefined;
 
     // Ordered research data per category (maintains user ordering)
     const [researchOrder, setResearchOrder] = useState<Record<ResearchDataCategoryType, number[]>>({
@@ -59,6 +62,11 @@ export const CoverLetter = () => {
     const [workExperiences, setWorkExperiences] = useState<WorkExperienceType[]>([]);
     const [workExpOrder, setWorkExpOrder] = useState<Record<number, number[]>>({});  // experienceId -> achievementIds order
     const [loadingWorkExp, setLoadingWorkExp] = useState(true);
+
+    // Cover letter generation state
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generationError, setGenerationError] = useState<string | null>(null);
+    const [generationSuccess, setGenerationSuccess] = useState(false);
 
     // Initialize when job loads
     useEffect(() => {
@@ -318,6 +326,104 @@ export const CoverLetter = () => {
         return null;
     };
 
+    const generateCoverLetter = async () => {
+        if (!job) return;
+
+        setIsGenerating(true);
+        setGenerationError(null);
+        setGenerationSuccess(false);
+
+        try {
+            // Build candidate_experience from selected achievements
+            const candidateExperience: string[] = [];
+            workExperiences.forEach(exp => {
+                const orderedAchievements = getSortedAchievements(exp);
+                orderedAchievements.forEach(ach => {
+                    if (selectedAchievementIds.has(ach.id)) {
+                        candidateExperience.push(`${exp.job_title} at ${exp.company_name}: ${ach.description}`);
+                    }
+                });
+            });
+
+            // Build company_research from selected COMPANY_RESEARCH and ROLE_RESEARCH items
+            const companyResearch: string[] = [];
+            const companyItems = getSortedResearchItems(ResearchDataCategory.COMPANY_RESEARCH);
+            const roleItems = getSortedResearchItems(ResearchDataCategory.ROLE_RESEARCH);
+            [...companyItems, ...roleItems].forEach(item => {
+                if (selectedResearchIds.has(item.id)) {
+                    companyResearch.push(item.info);
+                }
+            });
+
+            // Build job_responsibilities from selected RESPONSIBILITY items and insight responsibilities
+            const jobResponsibilities: string[] = [];
+            const responsibilityItems = getSortedResearchItems(ResearchDataCategory.RESPONSIBILITY);
+            responsibilityItems.forEach(item => {
+                if (selectedResearchIds.has(item.id)) {
+                    jobResponsibilities.push(item.info);
+                }
+            });
+            const insightResponsibilities = getSortedInsightItems('responsibilities');
+            insightResponsibilities.forEach(item => {
+                if (selectedInsightKeys.has(item.key)) {
+                    jobResponsibilities.push(item.text);
+                }
+            });
+
+            // Build job_requirements from selected REQUIREMENT items and insight requirements
+            const jobRequirements: string[] = [];
+            const requirementItems = getSortedResearchItems(ResearchDataCategory.REQUIREMENT);
+            requirementItems.forEach(item => {
+                if (selectedResearchIds.has(item.id)) {
+                    jobRequirements.push(item.info);
+                }
+            });
+            const insightRequirements = getSortedInsightItems('requirements');
+            insightRequirements.forEach(item => {
+                if (selectedInsightKeys.has(item.key)) {
+                    jobRequirements.push(item.text);
+                }
+            });
+
+            const requestBody = {
+                job_application_ids: [job.id],
+                cover_letter_inputs: [
+                    {
+                        candidate_experience: candidateExperience,
+                        company_research: companyResearch,
+                        job_responsibilities: jobResponsibilities,
+                        job_requirements: jobRequirements,
+                    }
+                ]
+            };
+
+            const csrftoken = getCookie('csrftoken');
+            const response = await fetch('/job_application/generate_cover_letter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || '',
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to generate cover letter: ${errorText}`);
+            }
+
+            setGenerationSuccess(true);
+        } catch (error) {
+            setGenerationError(error instanceof Error ? error.message : 'An error occurred');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const hasSelectedItems = () => {
+        return selectedResearchIds.size > 0 || selectedInsightKeys.size > 0 || selectedAchievementIds.size > 0;
+    };
+
     return (
         <div className="container">
             <Link to="/" className="back-link">← Back to Job Applications</Link>
@@ -536,7 +642,25 @@ export const CoverLetter = () => {
                         )}
                     </div>
 
-                    <p className="coming-soon-text">Cover letter generation feature coming soon...</p>
+                    {/* Generate Button and Status */}
+                    <div className="generate-cover-letter-section">
+                        <button
+                            className="generate-btn"
+                            onClick={generateCoverLetter}
+                            disabled={isGenerating || !hasSelectedItems()}
+                        >
+                            {isGenerating ? 'Generating...' : 'Generate Cover Letter'}
+                        </button>
+                        {!hasSelectedItems() && (
+                            <p className="helper-text">Select at least one item to generate a cover letter.</p>
+                        )}
+                        {generationError && (
+                            <p className="error-text">{generationError}</p>
+                        )}
+                        {generationSuccess && (
+                            <p className="success-text">Cover letter generation request sent successfully!</p>
+                        )}
+                    </div>
                 </div>
             ) : (
                 <div className="cover-letter-placeholder">

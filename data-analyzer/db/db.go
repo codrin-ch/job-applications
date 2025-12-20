@@ -61,6 +61,39 @@ func (db *DB) GetAllJobApplications() ([]models.JobApplication, error) {
 	return applications, nil
 }
 
+func (db *DB) GetJobApplicationsById(jobapplicationIds []int) ([]models.JobApplication, error) {
+	// split the job applications ids array into individual ids to fit the IN sql statements
+	var jobapplicationIdsString string
+	for _, jobapplicationId := range jobapplicationIds {
+		jobapplicationIdsString += fmt.Sprintf(`%d,`, jobapplicationId)
+	}
+	jobapplicationIdsString = jobapplicationIdsString[:len(jobapplicationIdsString)-1]
+	queryString := fmt.Sprintf(`
+		SELECT id, job_title, job_description
+		FROM jobs_jobapplication
+		WHERE id IN (%s)
+	`, jobapplicationIdsString)
+	rows, err := db.conn.Query(queryString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query job applications: %w", err)
+	}
+	defer rows.Close()
+
+	var applications []models.JobApplication
+	for rows.Next() {
+		var app models.JobApplication
+		err := rows.Scan(
+			&app.ID, &app.JobTitle, &app.JobDescription,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		applications = append(applications, app)
+	}
+
+	return applications, nil
+}
+
 // InsertWorkflow inserts a new workflow record into the database
 func (db *DB) InsertWorkflow(workflow models.Workflow) (int64, error) {
 	result, err := db.conn.Exec(`

@@ -3,6 +3,7 @@ import { JobBoards } from './components/JobBoards';
 import { JobApplications } from './components/job-application/JobApplications';
 import { WorkExperience } from './components/work-experience/WorkExperience';
 import { CoverLetter } from './components/cover-letter/CoverLetter';
+import { EditCoverLetter } from './components/cover-letter/EditCoverLetter';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Route path="/job-boards" element={<JobBoards />} />
           <Route path="/work-experience" element={<WorkExperience />} />
           <Route path="/:job_id/cover-letter" element={<CoverLetter />} />
+          <Route path="/:job_id/edit-cover-letter" element={<EditCoverLetter />} />
         </Routes>
       </div>
     </Router>

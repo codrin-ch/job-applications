@@ -18,10 +18,6 @@ type Client struct {
 
 // NewClient creates a new Gemini client with the provided API key
 func NewClient(ctx context.Context, cfg *config.Config) (*Client, error) {
-	if !cfg.ShouldRunAgent {
-		return nil, fmt.Errorf("should_run_agent environment variable not set")
-	}
-
 	if cfg.GeminiAPIKey == "" {
 		return nil, fmt.Errorf("GEMINI_API_KEY environment variable not set")
 	}

@@ -78,6 +78,7 @@ func (w *ExtractRoleDetailsWorkflow) Execute(ctx context.Context) (Result, error
 
 	prompt := fmt.Sprintf(`%s %s`, PROMPT, jobsBuilder.String())
 
+	w.client.Model().SetTemperature(0.1)
 	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to generate content: %w", err)

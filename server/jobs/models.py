@@ -32,6 +32,7 @@ class JobApplication(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cover_letter = models.TextField(default="", blank=True)
     workflows = models.ManyToManyField(
         "Workflow", related_name="job_applications", blank=True
     )
