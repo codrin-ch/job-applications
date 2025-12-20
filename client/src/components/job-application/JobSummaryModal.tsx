@@ -30,6 +30,7 @@ export const JobSummaryModal: React.FC<JobSummaryModalProps> = ({ isOpen, onClos
                                     data: stats.status_summary.map(s => s.count),
                                     backgroundColor: stats.status_summary.map(s => {
                                         const colors: Record<string, string> = {
+                                            'Preparing Application': '#9c27b0',
                                             'Applied': '#6c757d',
                                             'In Progress': '#2196F3',
                                             'Negative': '#dc3545',

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getCookie } from '../../utils/csrf';
 import './JobApplications.css';
-import type { Job, JobsData, JobApplicationsStats } from '../../types';
+import { Job, type JobsData, type JobApplicationsStats } from '../../types';
 import { JobSummaryModal } from './JobSummaryModal';
 import { JobDetailsModal } from './JobDetailsModal';
 import { AddStepModal } from './AddStepModal';
@@ -40,7 +40,9 @@ export const JobApplications = () => {
         fetch('/api/jobs/')
             .then(res => res.json())
             .then((data: JobsData) => {
-                setJobs(data.jobs);
+                // Convert JobData to Job class instances
+                const jobInstances = data.jobs.map(jobData => new Job(jobData));
+                setJobs(jobInstances);
                 setStats({
                     today_jobs_count: data.today_jobs_count,
                     daily_goal: data.daily_goal,
@@ -108,7 +110,13 @@ export const JobApplications = () => {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    setJobs(jobs.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+                    setJobs(jobs.map(j => {
+                        if (j.id === jobId) {
+                            // Create new Job instance with updated status
+                            return new Job({ ...j, status: newStatus });
+                        }
+                        return j;
+                    }));
                 } else {
                     alert("Failed to update status");
                 }
@@ -208,7 +216,7 @@ export const JobApplications = () => {
                 onStepAdded={(step) => {
                     if (selectedJob) {
                         const updatedSteps = [...selectedJob.steps, step];
-                        const updatedJob = { ...selectedJob, steps: updatedSteps };
+                        const updatedJob = new Job({ ...selectedJob, steps: updatedSteps });
                         setSelectedJob(updatedJob);
                         setJobs(jobs.map(j => j.id === selectedJob.id ? updatedJob : j));
                     }

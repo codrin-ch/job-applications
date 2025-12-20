@@ -8,18 +8,22 @@ import (
 )
 
 type Config struct {
-	GeminiAPIKey   string
-	GeminiModel    string
-	ShouldRunAgent bool
-	DBPath         string
+	GeminiAPIKey    string
+	GeminiModel     string
+	ShouldRunAgent  bool
+	ServerPort      string
+	ShouldRunServer bool
+	DBPath          string
 }
 
 func LoadConfig() (*Config, error) {
 	cfg := &Config{
-		GeminiAPIKey:   os.Getenv("GEMINI_API_KEY"),
-		GeminiModel:    os.Getenv("GEMINI_MODEL"),
-		ShouldRunAgent: os.Getenv("SHOULD_RUN_AGENT") == "true",
-		DBPath:         getEnvOrDefault("DB_PATH", "../server/db.sqlite3"),
+		GeminiAPIKey:    os.Getenv("GEMINI_API_KEY"),
+		GeminiModel:     os.Getenv("GEMINI_MODEL"),
+		ShouldRunAgent:  os.Getenv("SHOULD_RUN_AGENT") == "true",
+		ServerPort:      getEnvOrDefault("SERVER_PORT", ":8081"),
+		ShouldRunServer: os.Getenv("SHOULD_RUN_SERVER") == "true",
+		DBPath:          getEnvOrDefault("DB_PATH", "../server/db.sqlite3"),
 	}
 
 	return cfg, nil

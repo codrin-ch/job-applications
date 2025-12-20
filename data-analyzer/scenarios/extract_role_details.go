@@ -26,7 +26,7 @@ func NewExtractRoleDetailsScenario(geminiClient *agent.Client, db *db.DB, jobApp
 	}
 }
 
-func (s *ExtractRoleDetailsScenario) Execute(ctx context.Context) error {
+func (s *ExtractRoleDetailsScenario) Execute(ctx context.Context) ([]workflows.RoleDetails, error) {
 	extractJobResponsibilitiesWorkflow := workflows.NewExtractRoleDetailsWorkflow(s.geminiClient, s.jobApplications)
 
 	if result, err := extractJobResponsibilitiesWorkflow.Execute(ctx); err != nil {
@@ -69,7 +69,13 @@ func (s *ExtractRoleDetailsScenario) Execute(ctx context.Context) error {
 		} else {
 			fmt.Printf("📝 Workflow stored with ID: %d\n", workflowID)
 		}
+		err = s.db.InsertJobApplicationsWorkflow(jobIDs, workflowID)
+		if err != nil {
+			log.Printf("Failed to store job application workflow: %v", err)
+		}
+
+		return result.RoleDetails, nil
 	}
 
-	return nil
+	return nil, nil
 }

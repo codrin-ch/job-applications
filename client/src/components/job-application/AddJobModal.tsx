@@ -15,7 +15,7 @@ const DEFAULT_NEW_JOB = {
     job_description: '',
     resume_version: '',
     salary: '',
-    status: 'Applied',
+    status: 'Preparing Application',
     source: 'Careers Website'
 };
 
