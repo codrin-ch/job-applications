@@ -8,8 +8,6 @@ import (
 
 	"data-analyzer/agent"
 	"data-analyzer/models"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
 // RedFlag represents a single red flag identified in a job description
@@ -70,7 +68,7 @@ func (w *RedFlagsDetectionWorkflow) Execute(ctx context.Context) (RedFlagsDetect
 
 	prompt := fmt.Sprintf(`%s %s`, w.PROMT(), jobsBuilder.String())
 
-	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
+	resp, err := w.client.GenerateContent(ctx, prompt, 0.1, false)
 	if err != nil {
 		return w.errorResult(fmt.Errorf("failed to generate content: %w", err)), nil
 	}
@@ -80,12 +78,7 @@ func (w *RedFlagsDetectionWorkflow) Execute(ctx context.Context) (RedFlagsDetect
 	}
 
 	// Extract text from the response
-	var resultText string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			resultText += string(text)
-		}
-	}
+	resultText := resp.Text()
 
 	// Parse the JSON response
 	jobRedFlags, err := parseBatchRedFlags(resultText)

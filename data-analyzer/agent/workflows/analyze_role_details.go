@@ -9,8 +9,6 @@ import (
 	"data-analyzer/db"
 	"encoding/json"
 	"fmt"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
 const ANALYZE_ROLE_DETAILS_PROMPT = `
@@ -91,8 +89,7 @@ func (w *AnalyzeRoleDetailsWorkflow) Execute(ctx context.Context) (string, error
 
 	// try goroutines to start more queries in parallel with various temperatures and writing to different files
 
-	w.client.Model().SetTemperature(0.5)
-	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
+	resp, err := w.client.GenerateContent(ctx, prompt, 0.5, false)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -101,12 +98,7 @@ func (w *AnalyzeRoleDetailsWorkflow) Execute(ctx context.Context) (string, error
 		return "", fmt.Errorf("no response from Gemini")
 	}
 
-	var resultText string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			resultText += string(text)
-		}
-	}
+	resultText := resp.Text()
 
 	fmt.Println(resultText)
 

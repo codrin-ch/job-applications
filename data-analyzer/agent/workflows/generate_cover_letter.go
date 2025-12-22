@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
 // Need extra information about the user who applies to match various experinces, stories or skills from previous points
@@ -47,7 +45,7 @@ const GENERATE_COVER_LETTER_PROMPT = `
 	5. The Introduction paragraph must function as a concise executive summary, immediately capturing the reviewer's interest and establishing the applicant's relevance. Connect job description to candidate experience.
 	6. The body paragraph 1 must transition from a general statement of interest to a focused, persuasive argument detailing technical impact. For Senior Software Engineer roles, the content must emphasize deep technical mastery, individual accountability for complex problems, and optimization results. Connect job requirements and requirements to candidate experience.
 	7. The body paragraph 2 must explicitly deploy relevant technical vocabulary that validates deep architectural understanding and problem-solving skills. Connect job requirements and requirements to candidate experience.
-	8. The closing section must move beyond technical competency and address the candidate’s specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.
+	8. The closing section must move beyond technical competency and address the candidate's specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.
 	9. The output must contain only the content of the letter without headers or any other additional information.
 `
 
@@ -89,8 +87,7 @@ func (w *GenerateCoverLetterWorkflow) Execute(ctx context.Context, jobApplicatio
 	fmt.Println(prompt)
 
 	// TODO: experiment with different temperatures
-	w.client.Model().SetTemperature(0.9)
-	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
+	resp, err := w.client.GenerateContent(ctx, prompt, 0.9, false)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -99,12 +96,7 @@ func (w *GenerateCoverLetterWorkflow) Execute(ctx context.Context, jobApplicatio
 		return "", fmt.Errorf("no response from Gemini")
 	}
 
-	var resultText string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			resultText += string(text)
-		}
-	}
+	resultText := resp.Text()
 
 	parametersJSON, err := json.Marshal(map[string]interface{}{
 		"job_ids": []int{jobApplication.ID},
@@ -159,7 +151,7 @@ var COVER_LETTER_GUIDELINES = []string{
 	// body paragraph 2 (Fit)
 	"The body paragraph 2 must explicitly deploy relevant technical vocabulary that validates deep architectural understanding and problem-solving skills.",
 	// closing paragraph
-	"The closing section must move beyond technical competency and address the candidate’s specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.",
+	"The closing section must move beyond technical competency and address the candidate's specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.",
 }
 
 var COVER_LETTER_FORMAT_CHECKLIST = []string{

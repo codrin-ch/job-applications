@@ -8,12 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
-// need to get insight about the values and needs of the company at specific moments
-
+// TODO: improve the prompt as the results are suboptimal at the moment
 const RESEACH_COMPANY_PROMPT = `
 	You are an expert at researching companies and their values and needs.
 	The first priority of the research is the software engineering aspect.
@@ -80,8 +77,7 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 
 	fmt.Println(prompt)
 
-	w.client.Model().SetTemperature(0.5)
-	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
+	resp, err := w.client.GenerateContent(ctx, prompt, 1.5, true)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -90,11 +86,10 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 		return "", fmt.Errorf("no response from Gemini")
 	}
 
-	var resultText string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			resultText += string(text)
-		}
+	resultText := resp.Text()
+
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	parametersJSON, err := json.Marshal(map[string]interface{}{
