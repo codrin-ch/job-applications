@@ -37,7 +37,7 @@ func (db *DB) Close() error {
 // GetAllJobApplications retrieves all job applications from the database
 func (db *DB) GetAllJobApplications() ([]models.JobApplication, error) {
 	rows, err := db.conn.Query(`
-		SELECT id, job_title, job_description
+		SELECT id, job_title, job_description, company_name, company_url
 		FROM jobs_jobapplication
 		ORDER BY created_at DESC
 	`)
@@ -50,7 +50,7 @@ func (db *DB) GetAllJobApplications() ([]models.JobApplication, error) {
 	for rows.Next() {
 		var app models.JobApplication
 		err := rows.Scan(
-			&app.ID, &app.JobTitle, &app.JobDescription,
+			&app.ID, &app.JobTitle, &app.JobDescription, &app.CompanyName, &app.CompanyURL,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
@@ -69,7 +69,7 @@ func (db *DB) GetJobApplicationsById(jobapplicationIds []int) ([]models.JobAppli
 	}
 	jobapplicationIdsString = jobapplicationIdsString[:len(jobapplicationIdsString)-1]
 	queryString := fmt.Sprintf(`
-		SELECT id, job_title, job_description
+		SELECT id, job_title, job_description, company_name, company_url
 		FROM jobs_jobapplication
 		WHERE id IN (%s)
 	`, jobapplicationIdsString)
@@ -83,7 +83,7 @@ func (db *DB) GetJobApplicationsById(jobapplicationIds []int) ([]models.JobAppli
 	for rows.Next() {
 		var app models.JobApplication
 		err := rows.Scan(
-			&app.ID, &app.JobTitle, &app.JobDescription,
+			&app.ID, &app.JobTitle, &app.JobDescription, &app.CompanyName, &app.CompanyURL,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
@@ -150,4 +150,15 @@ func (db *DB) GetAllWorkflows() ([]models.Workflow, error) {
 	}
 
 	return workflows, nil
+}
+
+func (db *DB) AddStepToJobApplication(jobApplicationID int, step models.StepInput) error {
+	_, err := db.conn.Exec(`
+		INSERT INTO jobs_jobapplication_step (job_application_id, title, description)
+		VALUES (?, ?, ?)
+	`, jobApplicationID, step.Title, step.Description)
+	if err != nil {
+		return fmt.Errorf("failed to insert job application step: %w", err)
+	}
+	return nil
 }

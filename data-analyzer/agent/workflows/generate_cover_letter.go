@@ -20,7 +20,7 @@ import (
 
 // Generate cover letter (some guidance is neeed, maximum 250 words, focus on the top 3 responsibilites and requirements of the job that are also found in the user experience)
 const GENERATE_COVER_LETTER_PROMPT = `
-	You are an expert at writing cover letters for Senior Backend Engineers.
+	You are an expert at writing cover letters for Senior Software Engineers.
 	Create a cover letter based on the following information.
 
 	Job Title:
@@ -45,7 +45,7 @@ const GENERATE_COVER_LETTER_PROMPT = `
 	3. It must focus on what candidate can contribute to the company in this specific position.
 	4. The cover letter should have: Introduction, Body Paragraph 1 (Technical Mastery), Body Paragraph 2 (Fit) and Closing."
 	5. The Introduction paragraph must function as a concise executive summary, immediately capturing the reviewer's interest and establishing the applicant's relevance. Connect job description to candidate experience.
-	6. The body paragraph 1 must transition from a general statement of interest to a focused, persuasive argument detailing technical impact. For Senior Backend roles, the content must emphasize deep technical mastery, individual accountability for complex problems, and optimization results. Connect job requirements and requirements to candidate experience.
+	6. The body paragraph 1 must transition from a general statement of interest to a focused, persuasive argument detailing technical impact. For Senior Software Engineer roles, the content must emphasize deep technical mastery, individual accountability for complex problems, and optimization results. Connect job requirements and requirements to candidate experience.
 	7. The body paragraph 2 must explicitly deploy relevant technical vocabulary that validates deep architectural understanding and problem-solving skills. Connect job requirements and requirements to candidate experience.
 	8. The closing section must move beyond technical competency and address the candidate’s specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.
 	9. The output must contain only the content of the letter without headers or any other additional information.
@@ -136,6 +136,14 @@ func (w *GenerateCoverLetterWorkflow) Execute(ctx context.Context, jobApplicatio
 	err = w.db.InsertJobApplicationsWorkflow([]int{jobApplication.ID}, workflowID)
 	if err != nil {
 		log.Printf("Failed to store job application workflow: %v", err)
+	}
+
+	err = w.db.AddStepToJobApplication(jobApplication.ID, models.StepInput{
+		Title:       "Generate Cover Letter",
+		Description: fmt.Sprintf("Cover letter generated successfully via workflow %d", workflowID),
+	})
+	if err != nil {
+		log.Printf("Failed to store job application step: %v", err)
 	}
 
 	return resultText, nil

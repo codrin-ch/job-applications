@@ -1,1 +1,4 @@
 data-analyzer
+data/*
+research_interview_process.go
+generate_resume.go
