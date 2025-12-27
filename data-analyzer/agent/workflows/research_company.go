@@ -28,21 +28,21 @@ const RESEACH_COMPANY_PROMPT = `
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "transcenda.com"
+				"source": "test.com"
 			}
 		]
 		"business": [
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "transcenda.com"
+				"source": "test.com"
 			}
 		]
 		"company_overview": [
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "transcenda.com"
+				"source": "test.com"
 			}
 		]
 	}
@@ -94,8 +94,6 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 
 	prompt := fmt.Sprintf(RESEACH_COMPANY_PROMPT, companyName, companyWebsite)
 
-	fmt.Println(prompt)
-
 	resp, err := w.client.GenerateContent(ctx, prompt, 1.5, true)
 	if err != nil {
 		return result, fmt.Errorf("failed to generate content: %w", err)
@@ -106,10 +104,6 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 	}
 
 	resultText := resp.Text()
-
-	if err != nil {
-		return result, fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
 
 	parametersJSON, err := json.Marshal(map[string]interface{}{
 		"job_ids": []int{jobApplication.ID},
