@@ -335,6 +335,22 @@ def get_jobs(request):
                         "cover_letter": workflow.output,
                     }
                 )
+            elif workflow.workflow_name == "research_company":
+                company_research = workflow.parseOutput()
+                for key in company_research.keys():
+                    company_research[key] = [
+                        {
+                            "value": item["value"],
+                            "example": item["example"],
+                        }
+                        for item in company_research[key]
+                    ]
+                job_workflows.append(
+                    {
+                        "workflow_name": workflow.workflow_name,
+                        "company_research": company_research,
+                    }
+                )
 
         jobs_data.append(
             {

@@ -32,8 +32,24 @@ export interface GenerateCoverLetterWorkflow {
     cover_letter: string;
 }
 
+export interface CompanyResearchItem {
+    value: string;
+    example: string;
+}
+
+export interface CompanyResearch {
+    software_engineering: CompanyResearchItem[];
+    business: CompanyResearchItem[];
+    company_overview: CompanyResearchItem[];
+}
+
+export interface ResearchCompanyWorkflow {
+    workflow_name: 'research_company';
+    company_research: CompanyResearch;
+}
+
 // Union type for all workflow types - extend as new workflow types are added
-export type Workflow = ExtractRoleDetailsWorkflow | GenerateCoverLetterWorkflow;
+export type Workflow = ExtractRoleDetailsWorkflow | GenerateCoverLetterWorkflow | ResearchCompanyWorkflow;
 
 // Job data interface (for raw API responses)
 export interface JobData {

@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"data-analyzer/models"
 
@@ -154,9 +155,9 @@ func (db *DB) GetAllWorkflows() ([]models.Workflow, error) {
 
 func (db *DB) AddStepToJobApplication(jobApplicationID int, step models.StepInput) error {
 	_, err := db.conn.Exec(`
-		INSERT INTO jobs_jobapplication_step (job_application_id, title, description)
-		VALUES (?, ?, ?)
-	`, jobApplicationID, step.Title, step.Description)
+		INSERT INTO jobs_step (job_application_id, title, description, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
+	`, jobApplicationID, step.Title, step.Description, time.Now().Format("2006-01-02 15:04:05"), time.Now().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return fmt.Errorf("failed to insert job application step: %w", err)
 	}

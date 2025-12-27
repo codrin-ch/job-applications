@@ -19,9 +19,8 @@ type ResearchCompanyRequest struct {
 
 // ResearchCompanyResponse represents the response body for the research company endpoint
 type ResearchCompanyResponse struct {
-	Message           string   `json:"message"`
-	JobApplicationIDs []int    `json:"job_application_ids"`
-	CompanyResearch   []string `json:"company_research"`
+	Message         string                           `json:"message"`
+	CompanyResearch []agentWorkflows.ResearchCompany `json:"company_research"`
 }
 
 type ResearchCompanyHandler struct {
@@ -106,7 +105,7 @@ func (h *ResearchCompanyHandler) HandleResearchCompany(w http.ResponseWriter, r 
 	}
 
 	if len(jobApplicationsWithoutExistingWorkflows) > 0 {
-		companyResearch := make([]string, 0)
+		companyResearch := make([]agentWorkflows.ResearchCompany, 0)
 		for _, jobApplication := range jobApplicationsWithoutExistingWorkflows {
 			researchCompanyWorkflow := agentWorkflows.NewResearchCompanyWorkflow(h.geminiClient, h.db)
 			research, err := researchCompanyWorkflow.Execute(context.TODO(), jobApplication)

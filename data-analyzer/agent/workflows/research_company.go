@@ -16,33 +16,33 @@ const RESEACH_COMPANY_PROMPT = `
 	The first priority of the research is the software engineering aspect.
 	The second priority of the research is the business aspect.
 	The last one is the company overview.
-	Focus on the most recent data, preferably not older than 1 or 2 years.
+	Focus on data from 2025 and 2024, the most recent data is the most relevant.
 	
 	Starting from the Company Name and Company Website, you need to research the company based on the previously defined priorities.
 	The research should also go by scrapping the web for various information, but all the relevant conclusions must be state their source.
 	The facts and information that appears in more places should be first in the output and the ones that are less frequent should be the last.
 	The results of this research must be summarised in these categories with examples.
-	The ouput should be a JSON object with the following structure:
+	The ouput should be a JSON object with the following structure in which the source should be the title of the groundingChunks used for that statement.
 	{
 		"software_engineering": [
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "Source 1"
+				"source": "transcenda.com"
 			}
 		]
 		"business": [
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "Source 1"
+				"source": "transcenda.com"
 			}
 		]
 		"company_overview": [
 			{
 				"value": "Value 1",
 				"example": "Example 1",
-				"source": "Source 1"
+				"source": "transcenda.com"
 			}
 		]
 	}
@@ -57,6 +57,24 @@ const RESEACH_COMPANY_PROMPT = `
 	Company Website: %s
 `
 
+type ResearchCompany struct {
+	SoftwareEngineering []struct {
+		Value   string `json:"value"`
+		Example string `json:"example"`
+		Source  string `json:"source"`
+	} `json:"software_engineering"`
+	Business []struct {
+		Value   string `json:"value"`
+		Example string `json:"example"`
+		Source  string `json:"source"`
+	} `json:"business"`
+	CompanyOverview []struct {
+		Value   string `json:"value"`
+		Example string `json:"example"`
+		Source  string `json:"source"`
+	} `json:"company_overview"`
+}
+
 type ResearchCompanyWorkflow struct {
 	client *agent.Client
 	db     *db.DB
@@ -69,7 +87,8 @@ func NewResearchCompanyWorkflow(client *agent.Client, db *db.DB) *ResearchCompan
 	}
 }
 
-func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication models.JobApplication) (string, error) {
+func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication models.JobApplication) (ResearchCompany, error) {
+	var result ResearchCompany
 	companyName := jobApplication.CompanyName
 	companyWebsite := jobApplication.CompanyURL
 
@@ -79,17 +98,17 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 
 	resp, err := w.client.GenerateContent(ctx, prompt, 1.5, true)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
+		return result, fmt.Errorf("failed to generate content: %w", err)
 	}
 
 	if len(resp.Candidates) == 0 {
-		return "", fmt.Errorf("no response from Gemini")
+		return result, fmt.Errorf("no response from Gemini")
 	}
 
 	resultText := resp.Text()
 
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return result, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
 	parametersJSON, err := json.Marshal(map[string]interface{}{
@@ -100,6 +119,8 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 		log.Printf("Failed to marshal parameters: %v", err)
 	}
 
+	resultText = agent.SanitizeAgentJSONResponse(resultText)
+
 	// store the result in database
 	workflowRecord := models.Workflow{
 		WorkflowName: "research_company",
@@ -109,12 +130,9 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 		Parameters:   string(parametersJSON),
 	}
 
-	resultText = agent.SanitizeAgentJSONResponse(resultText)
-
-	fmt.Println("\nGenerated Research Company:")
-	fmt.Println(resultText)
-
-	return resultText, nil
+	if err := json.Unmarshal([]byte(resultText), &result); err != nil {
+		return result, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
 
 	// store the result in database
 	workflowID, err := w.db.InsertWorkflow(workflowRecord)
@@ -136,5 +154,5 @@ func (w *ResearchCompanyWorkflow) Execute(ctx context.Context, jobApplication mo
 		log.Printf("Failed to store job application step: %v", err)
 	}
 
-	return resultText, nil
+	return result, nil
 }
