@@ -165,6 +165,12 @@
     line-height: 1.4;
 }
 
+.research-example-inline {
+    color: #6c757d;
+    font-weight: normal;
+    font-style: italic;
+}
+
 .no-items-msg {
     color: #6c757d;
     font-style: italic;

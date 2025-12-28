@@ -25,7 +25,16 @@ const INSIGHT_LABELS = {
     requirements: 'Requirements',
 } as const;
 
+const COMPANY_RESEARCH_LABELS = {
+    software_engineering: 'Software Engineering',
+    business: 'Business',
+    company_overview: 'Company Overview',
+} as const;
+
+type CompanyResearchField = 'software_engineering' | 'business' | 'company_overview';
+
 type InsightItem = { key: string; text: string; field: 'responsibilities' | 'requirements' };
+type CompanyResearchInsightItem = { key: string; value: string; example: string; field: CompanyResearchField };
 
 export const CoverLetter = () => {
     const { job_id } = useParams<{ job_id: string }>();
@@ -53,9 +62,18 @@ export const CoverLetter = () => {
     const [selectedInsightKeys, setSelectedInsightKeys] = useState<Set<string>>(new Set());
     const [selectedAchievementIds, setSelectedAchievementIds] = useState<Set<number>>(new Set());
 
+    // Company research insights state (from research_company workflow)
+    const [companyResearchOrder, setCompanyResearchOrder] = useState<Record<CompanyResearchField, string[]>>({
+        software_engineering: [],
+        business: [],
+        company_overview: [],
+    });
+    const [selectedCompanyResearchKeys, setSelectedCompanyResearchKeys] = useState<Set<string>>(new Set());
+
     // Collapsed state for sections
     const [collapsedCategories, setCollapsedCategories] = useState<Set<ResearchDataCategoryType>>(new Set());
     const [collapsedInsights, setCollapsedInsights] = useState<Set<'responsibilities' | 'requirements'>>(new Set());
+    const [collapsedCompanyResearch, setCollapsedCompanyResearch] = useState<Set<CompanyResearchField>>(new Set());
     const [collapsedExperiences, setCollapsedExperiences] = useState<Set<number>>(new Set());
 
     // Work experience data
@@ -102,6 +120,30 @@ export const CoverLetter = () => {
                 });
             }
             setInsightOrder(newInsightOrder);
+
+            // Initialize company research order (but don't select any)
+            const newCompanyResearchOrder: Record<CompanyResearchField, string[]> = {
+                software_engineering: [],
+                business: [],
+                company_overview: [],
+            };
+
+            const companyResearchWorkflow = job.workflows?.find(w => w.workflow_name === 'research_company');
+            if (companyResearchWorkflow && companyResearchWorkflow.workflow_name === 'research_company') {
+                const research = companyResearchWorkflow.company_research;
+                if (research) {
+                    research.software_engineering?.forEach((_, idx) => {
+                        newCompanyResearchOrder.software_engineering.push(`software_engineering-${idx}`);
+                    });
+                    research.business?.forEach((_, idx) => {
+                        newCompanyResearchOrder.business.push(`business-${idx}`);
+                    });
+                    research.company_overview?.forEach((_, idx) => {
+                        newCompanyResearchOrder.company_overview.push(`company_overview-${idx}`);
+                    });
+                }
+            }
+            setCompanyResearchOrder(newCompanyResearchOrder);
         }
     }, [job]);
 
@@ -177,6 +219,30 @@ export const CoverLetter = () => {
         });
     };
 
+    const toggleCompanyResearchKey = (key: string) => {
+        setSelectedCompanyResearchKeys(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) {
+                next.delete(key);
+            } else {
+                next.add(key);
+            }
+            return next;
+        });
+    };
+
+    const toggleCompanyResearchCollapse = (field: CompanyResearchField) => {
+        setCollapsedCompanyResearch(prev => {
+            const next = new Set(prev);
+            if (next.has(field)) {
+                next.delete(field);
+            } else {
+                next.add(field);
+            }
+            return next;
+        });
+    };
+
     const toggleExperienceCollapse = (expId: number) => {
         setCollapsedExperiences(prev => {
             const next = new Set(prev);
@@ -219,6 +285,21 @@ export const CoverLetter = () => {
     // Move insight item up/down within its field
     const moveInsightItem = (field: 'responsibilities' | 'requirements', key: string, direction: 'up' | 'down') => {
         setInsightOrder(prev => {
+            const order = [...prev[field]];
+            const idx = order.indexOf(key);
+            if (idx === -1) return prev;
+
+            const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+            if (newIdx < 0 || newIdx >= order.length) return prev;
+
+            [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+            return { ...prev, [field]: order };
+        });
+    };
+
+    // Move company research item up/down within its field
+    const moveCompanyResearchItem = (field: CompanyResearchField, key: string, direction: 'up' | 'down') => {
+        setCompanyResearchOrder(prev => {
             const order = [...prev[field]];
             const idx = order.indexOf(key);
             if (idx === -1) return prev;
@@ -326,6 +407,46 @@ export const CoverLetter = () => {
         return null;
     };
 
+    const getCompanyResearchWorkflow = () => {
+        if (!job?.workflows) return null;
+        const workflow = job.workflows.find(w => w.workflow_name === 'research_company');
+        if (workflow && workflow.workflow_name === 'research_company') {
+            return workflow;
+        }
+        return null;
+    };
+
+    // Get sorted company research items
+    const getSortedCompanyResearchItems = (field: CompanyResearchField): CompanyResearchInsightItem[] => {
+        const workflow = getCompanyResearchWorkflow();
+        if (!workflow) return [];
+
+        const items = workflow.company_research?.[field] || [];
+        const order = companyResearchOrder[field];
+
+        const selected: CompanyResearchInsightItem[] = [];
+        const unselected: CompanyResearchInsightItem[] = [];
+
+        order.forEach(key => {
+            const idx = parseInt(key.split('-')[1], 10);
+            if (idx < items.length) {
+                const item: CompanyResearchInsightItem = {
+                    key,
+                    value: items[idx].value,
+                    example: items[idx].example,
+                    field
+                };
+                if (selectedCompanyResearchKeys.has(key)) {
+                    selected.push(item);
+                } else {
+                    unselected.push(item);
+                }
+            }
+        });
+
+        return [...selected, ...unselected];
+    };
+
     const generateCoverLetter = async () => {
         if (!job) return;
 
@@ -345,7 +466,7 @@ export const CoverLetter = () => {
                 });
             });
 
-            // Build company_research from selected COMPANY_RESEARCH and ROLE_RESEARCH items
+            // Build company_research from selected COMPANY_RESEARCH and ROLE_RESEARCH items (from Deep Dive)
             const companyResearch: string[] = [];
             const companyItems = getSortedResearchItems(ResearchDataCategory.COMPANY_RESEARCH);
             const roleItems = getSortedResearchItems(ResearchDataCategory.ROLE_RESEARCH);
@@ -353,6 +474,19 @@ export const CoverLetter = () => {
                 if (selectedResearchIds.has(item.id)) {
                     companyResearch.push(item.info);
                 }
+            });
+
+            // Add selected company research items from the research_company workflow
+            const companyResearchFields: CompanyResearchField[] = ['software_engineering', 'business', 'company_overview'];
+            companyResearchFields.forEach(field => {
+                const items = getSortedCompanyResearchItems(field);
+                items.forEach(item => {
+                    if (selectedCompanyResearchKeys.has(item.key)) {
+                        // Combine value and example for richer context
+                        const text = item.example ? `${item.value}: ${item.example}` : item.value;
+                        companyResearch.push(text);
+                    }
+                });
             });
 
             // Build job_responsibilities from selected RESPONSIBILITY items and insight responsibilities
@@ -421,7 +555,7 @@ export const CoverLetter = () => {
     };
 
     const hasSelectedItems = () => {
-        return selectedResearchIds.size > 0 || selectedInsightKeys.size > 0 || selectedAchievementIds.size > 0;
+        return selectedResearchIds.size > 0 || selectedInsightKeys.size > 0 || selectedAchievementIds.size > 0 || selectedCompanyResearchKeys.size > 0;
     };
 
     return (
@@ -559,6 +693,83 @@ export const CoverLetter = () => {
                                                                             onChange={() => toggleInsightKey(item.key)}
                                                                         />
                                                                         <span className="checkbox-label item-text">{item.text}</span>
+                                                                    </label>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </>
+                            );
+                        })()}
+                    </div>
+
+                    {/* Company Research Insights - Individual Items Selection */}
+                    <div className="input-selection-section">
+                        <h4>Company Research Insights</h4>
+                        <p className="section-description">Select and reorder company research items to include:</p>
+
+                        {(() => {
+                            const workflow = getCompanyResearchWorkflow();
+                            if (!workflow) {
+                                return <p className="no-items-msg">No company research available.</p>;
+                            }
+
+                            return (
+                                <>
+                                    {(['software_engineering', 'business', 'company_overview'] as const).map(field => {
+                                        const items = getSortedCompanyResearchItems(field);
+                                        if (items.length === 0) return null;
+                                        const isCollapsed = collapsedCompanyResearch.has(field);
+
+                                        return (
+                                            <div key={field} className="category-group">
+                                                <div
+                                                    className="category-header collapsible"
+                                                    onClick={() => toggleCompanyResearchCollapse(field)}
+                                                >
+                                                    <span className={`collapse-icon ${isCollapsed ? 'collapsed' : ''}`}>▼</span>
+                                                    {COMPANY_RESEARCH_LABELS[field]}
+                                                    <span className="item-count">({items.filter(i => selectedCompanyResearchKeys.has(i.key)).length}/{items.length})</span>
+                                                </div>
+                                                {!isCollapsed && (
+                                                    <div className="checkbox-group">
+                                                        {items.map((item) => {
+                                                            const isSelected = selectedCompanyResearchKeys.has(item.key);
+                                                            const selectedItems = items.filter(i => selectedCompanyResearchKeys.has(i.key));
+                                                            const selectedIdx = selectedItems.findIndex(i => i.key === item.key);
+                                                            const canMoveUp = isSelected && selectedIdx > 0;
+                                                            const canMoveDown = isSelected && selectedIdx < selectedItems.length - 1;
+
+                                                            return (
+                                                                <div key={item.key} className={`reorderable-item ${!isSelected ? 'unselected' : ''}`}>
+                                                                    <div className="reorder-buttons">
+                                                                        <button
+                                                                            className="reorder-btn"
+                                                                            onClick={() => moveCompanyResearchItem(field, item.key, 'up')}
+                                                                            disabled={!canMoveUp}
+                                                                            title="Move up"
+                                                                        >↑</button>
+                                                                        <button
+                                                                            className="reorder-btn"
+                                                                            onClick={() => moveCompanyResearchItem(field, item.key, 'down')}
+                                                                            disabled={!canMoveDown}
+                                                                            title="Move down"
+                                                                        >↓</button>
+                                                                    </div>
+                                                                    <label className="checkbox-item">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isSelected}
+                                                                            onChange={() => toggleCompanyResearchKey(item.key)}
+                                                                        />
+                                                                        <span className="checkbox-label item-text">
+                                                                            <strong>{item.value}</strong>
+                                                                            {item.example && <span className="research-example-inline"> — {item.example}</span>}
+                                                                        </span>
                                                                     </label>
                                                                 </div>
                                                             );
