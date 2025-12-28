@@ -39,7 +39,8 @@ This is the React-based frontend for the Job Applications Tracker application.
 
 - `src/`: Main source directory.
     - `components/`: React components.
-        - `job-application/`: Job application components (JobApplications, AddJobModal, JobDetailsModal, etc.).
+        - `job-application/`: Job application components (JobApplications, AddJobModal, JobDetailsModal, JobInsights, etc.).
+        - `cover-letter/`: Cover letter preparation (CoverLetter, GenerateCoverLetter).
         - `work-experience/`: Work experience components (WorkExperience, WorkExperienceSection, AddWorkExperienceModal).
         - `JobBoards.tsx`: Job boards tracker component.
     - `utils/`: Utility functions (CSRF handling).
@@ -72,6 +73,15 @@ The client provides a modern, responsive user interface mirroring the server-sid
 ### Job Boards Tracker
 - **Board Management:** Add and track various job boards.
 - **Daily Visit Tracking:** Track daily visits to ensure consistent sourcing habits. Links update "Last Visited" timestamp automatically.
+
+### Cover Letter Preparation
+- **Dedicated Cover Letter Page:** Navigate to `/{job_id}/cover-letter` to prepare a cover letter for any application.
+- **Research Selection:** Select and order Deep Dive research items (responsibilities, requirements, company/role research) to include in the cover letter.
+- **Extracted Insights:** View and select AI-extracted insights from the role details workflow.
+- **Company Research Integration:** Include company research insights (software engineering, business, company overview) from the research_company workflow.
+- **Work Experience Selection:** Select and order work experiences and achievements to highlight.
+- **Drag-and-Drop Ordering:** Reorder selected items using up/down controls to prioritize information.
+- **AI-Powered Generation:** Generate personalized cover letters by sending curated selections to the data-analyzer API.
 
 ### Work Experience Management
 - **Experience Tracking:** Add and manage work experience entries with job title, company, dates.

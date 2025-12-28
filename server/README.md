@@ -81,6 +81,7 @@ The server exposes the following JSON endpoints:
 - **`POST /add_job/`**
   - Creates a new job application.
   - Body: `{ job_title, company_name, company_url, job_description, resume_version, salary, status, source }`
+  - Default status is `"Preparing Application"` (for jobs being researched before applying).
 
 - **`PUT /update_job_field/<int:job_id>/`**
   - Updates a specific field of a job application.
@@ -129,7 +130,7 @@ The server exposes the following JSON endpoints:
   - Updates existing research data.
   - Body: `{ category?, info? }` (at least one required)
 
-> **Note:** `GET /api/jobs/` now includes a `research_data` array for each job.
+> **Note:** `GET /api/jobs/` now includes a `research_data` array and a `workflows` array for each job, providing AI-extracted insights.
 
 ## Linting
 

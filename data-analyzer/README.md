@@ -59,11 +59,12 @@ DB_PATH=../server/db.sqlite3
 
 - `agent/`: Gemini AI client wrapper and utilities.
     - `workflows/`: AI-powered analysis workflows definition.
+- `api/`: HTTP API server and request handlers.
 - `config/`: Application configuration (environment variables).
 - `db/`: Database connection and queries.
-- `models/`: Data models (JobApplication, Workflow).
+- `models/`: Data models (JobApplication, Workflow, CoverLetterInput).
 - `scenarios/`: High-level execution scripts combining workflows and database operations.
-- `main.go`: Entry point and workflow orchestration.
+- `main.go`: Entry point, workflow orchestration, and HTTP server startup.
 
 ## Available Workflows
 
@@ -106,6 +107,50 @@ Analyzes job descriptions to extract formal responsibilities and requirements, s
 ```
 Responsibilities: Design and implement scalable backend services...
 Requirements: 5+ years of experience with Go, strong knowledge of distributed systems...
+```
+
+### Generate Cover Letter
+
+Creates personalized cover letters using AI by combining job details, company research, extracted insights, and user's work experience. Accepts curated inputs from the client side.
+
+**Input:**
+- Job application details (title, company)
+- Selected deep dive research items
+- Selected workflow insights (responsibilities, requirements)
+- Selected company research (software engineering, business, company overview)
+- Selected work experience achievements
+
+### Company Research
+
+Performs automated research on companies using Gemini AI with grounding capabilities. Gathers insights about the company's engineering culture, business model, and general overview from recent sources (2024-2025).
+
+**Example output:**
+```json
+{
+  "software_engineering": [{"value": "Microservices architecture", "example": "...", "source": "..."}],
+  "business": [{"value": "B2B SaaS", "example": "...", "source": "..."}],
+  "company_overview": [{"value": "Founded in 2020", "example": "...", "source": "..."}]
+}
+```
+
+## HTTP API Server
+
+The data-analyzer includes an HTTP API server that exposes AI workflows to the client application.
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/job_application/generate_cover_letter` | Generates a cover letter for specified job applications using curated inputs |
+| `POST` | `/job_application/generate_insight` | Extracts role details and insights from job descriptions |
+| `POST` | `/job_application/research_company` | Performs company research using Gemini AI with grounding |
+
+### Configuration
+
+Add the following to your `.env` file to enable the HTTP server:
+
+```env
+SERVER_PORT=:8080
 ```
 
 ## Architecture
