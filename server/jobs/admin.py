@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import JobApplication, JobBoard, ResearchData, Step, Workflow, WorkExperience, WorkAchievement
+from .models import (
+    JobApplication,
+    JobBoard,
+    ResearchData,
+    Step,
+    WorkAchievement,
+    WorkExperience,
+    Workflow,
+)
 
 admin.site.register(JobApplication)
 admin.site.register(Step)
