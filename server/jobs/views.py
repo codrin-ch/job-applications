@@ -24,13 +24,15 @@ STATUS_ORDER = Case(
     When(status="Offer", then=1),
     When(status="Technical Interview", then=2),
     When(status="HR Interview", then=3),
-    When(status="Applied", then=4),
-    When(status="Ghosted", then=5),
-    When(status="Rejected", then=6),
-    When(status="Avoid", then=7),
+    When(status="Preparing Application", then=4),
+    When(status="Applied", then=5),
+    When(status="Ghosted", then=6),
+    When(status="Rejected", then=7),
+    When(status="Avoid", then=8),
     output_field=IntegerField(),
 )
 CATEGORY_MAP = {
+    "Preparing Application": "Preparing Application",
     "Applied": "Applied",
     "HR Interview": "In Progress",
     "Technical Interview": "In Progress",
@@ -50,8 +52,8 @@ def update_job_field(request, job_id):
         new_value = data.get(field_name)
         job = get_object_or_404(JobApplication, pk=job_id)
 
-        # For salary field, no validation needed (free text)
-        if field_name == "salary":
+        # For salary and cover_letter fields, no validation needed (free text)
+        if field_name in ["salary", "cover_letter"]:
             setattr(job, field_name, new_value)
             job.save()
             return JsonResponse({"success": True})
@@ -116,7 +118,7 @@ def add_job(request):
         job_description = data.get("job_description")
         resume_version = data.get("resume_version")
         salary = data.get("salary", "")
-        status = data.get("status", "Applied")
+        status = data.get("status", "Preparing Application")
         source = data.get("source", "Careers Website")
 
         if not all(
@@ -265,6 +267,7 @@ def get_jobs(request):
     status_count_map = {item["status"]: item["count"] for item in status_counts}
 
     categories = {
+        "Preparing Application": 0,
         "Applied": 0,
         "In Progress": 0,
         "Negative": 0,
@@ -312,18 +315,42 @@ def get_jobs(request):
             for step in job.steps.all()
         ]
         job_workflows = []
-        workflows = job.workflows.all().filter(workflow_name="extract_role_details")
+        workflows = job.workflows.all().filter()
         for workflow in workflows:
-            role_details = workflow.parseOutput()
-            for role_detail in role_details:
-                if role_detail["job_id"] == job.id:
-                    job_workflows.append(
+            if workflow.workflow_name == "extract_role_details":
+                role_details = workflow.parseOutput()
+                for role_detail in role_details:
+                    if role_detail["job_id"] == job.id:
+                        job_workflows.append(
+                            {
+                                "workflow_name": workflow.workflow_name,
+                                "responsibilities": role_detail["responsibilities"],
+                                "requirements": role_detail["requirements"],
+                            }
+                        )
+            elif workflow.workflow_name == "generate_cover_letter":
+                job_workflows.append(
+                    {
+                        "workflow_name": workflow.workflow_name,
+                        "cover_letter": workflow.output,
+                    }
+                )
+            elif workflow.workflow_name == "research_company":
+                company_research = workflow.parseOutput()
+                for key in company_research.keys():
+                    company_research[key] = [
                         {
-                            "workflow_name": workflow.workflow_name,
-                            "responsibilities": role_detail["responsibilities"],
-                            "requirements": role_detail["requirements"],
+                            "value": item["value"],
+                            "example": item["example"],
                         }
-                    )
+                        for item in company_research[key]
+                    ]
+                job_workflows.append(
+                    {
+                        "workflow_name": workflow.workflow_name,
+                        "company_research": company_research,
+                    }
+                )
 
         jobs_data.append(
             {
@@ -344,6 +371,7 @@ def get_jobs(request):
                 .replace("PM", "p.m."),
                 "steps": steps,
                 "workflows": job_workflows,
+                "cover_letter": job.cover_letter,
                 "research_data": [
                     {
                         "id": rd.id,

@@ -12,3 +12,8 @@ type Workflow struct {
 	Output       string
 	Parameters   string
 }
+
+type WorkflowParameters struct {
+	JobIds []int    `json:"job_ids"`
+	Fields []string `json:"fields"`
+}

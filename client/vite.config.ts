@@ -23,6 +23,8 @@ export default defineConfig({
       '/update_work_achievement': 'http://localhost:8000',
       '/add_research_data': 'http://localhost:8000',
       '/update_research_data': 'http://localhost:8000',
+      '/job_application/generate_cover_letter': 'http://localhost:8081',
+      '/job_application/research_company': 'http://localhost:8081',
     }
   }
 })

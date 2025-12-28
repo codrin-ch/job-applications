@@ -1,0 +1,135 @@
+package workflows
+
+import (
+	"context"
+	"data-analyzer/agent"
+	"data-analyzer/db"
+	"data-analyzer/models"
+	"encoding/json"
+	"fmt"
+	"log"
+)
+
+const GENERATE_COVER_LETTER_PROMPT = `
+	You are an expert at writing cover letters for Senior Software Engineers.
+	Create a cover letter based on the following information.
+
+	Job Title:
+	%s
+
+	Company Research:
+	%s
+
+	Role Responsibilities:
+	%s
+
+	Role Requirements:
+	%s
+
+	Candidate experience:
+	%s
+	
+	Guidelines for writing the content of the cover letter:
+	0. The cover letter must be 300 words or less. 
+	1. It must be written in active voice.
+	2. It must thoughtfully connect candidate experience to the role description, resonsibilities and requirements.
+	3. It must focus on what candidate can contribute to the company in this specific position.
+	4. The cover letter should have: Introduction, Body Paragraph 1 (Technical Mastery), Body Paragraph 2 (Fit) and Closing."
+	5. The Introduction paragraph must function as a concise executive summary, immediately capturing the reviewer's interest and establishing the applicant's relevance. Connect job description to candidate experience.
+	6. The body paragraph 1 must transition from a general statement of interest to a focused, persuasive argument detailing technical impact. For Senior Software Engineer roles, the content must emphasize deep technical mastery, individual accountability for complex problems, and optimization results. Connect job requirements and requirements to candidate experience.
+	7. The body paragraph 2 must explicitly deploy relevant technical vocabulary that validates deep architectural understanding and problem-solving skills. Connect job requirements and requirements to candidate experience.
+	8. The closing section must move beyond technical competency and address the candidate's specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.
+	9. The output must contain only the content of the letter without headers or any other additional information.
+`
+
+type GenerateCoverLetterWorkflow struct {
+	client *agent.Client
+	db     *db.DB
+}
+
+func NewGenerateCoverLetterWorkflow(client *agent.Client, db *db.DB) *GenerateCoverLetterWorkflow {
+	return &GenerateCoverLetterWorkflow{
+		client: client,
+		db:     db,
+	}
+}
+
+func (w *GenerateCoverLetterWorkflow) Execute(ctx context.Context, jobApplication models.JobApplication, coverLetterInput models.CoverLetterInput) (string, error) {
+	companyResearchString := ""
+	for _, research := range coverLetterInput.CompanyResearch {
+		companyResearchString += fmt.Sprintf("- %s\n", research)
+	}
+
+	roleResponsibilitiesString := ""
+	for _, responsibility := range coverLetterInput.JobResponsibilities {
+		roleResponsibilitiesString += fmt.Sprintf("- %s\n", responsibility)
+	}
+
+	roleRequirementsString := ""
+	for _, requirement := range coverLetterInput.JobRequirements {
+		roleRequirementsString += fmt.Sprintf("- %s\n", requirement)
+	}
+
+	candidateExperienceString := ""
+	for _, experience := range coverLetterInput.CandidateExperience {
+		candidateExperienceString += fmt.Sprintf("- %s\n", experience)
+	}
+
+	prompt := fmt.Sprintf(GENERATE_COVER_LETTER_PROMPT, jobApplication.JobTitle, companyResearchString, roleResponsibilitiesString, roleRequirementsString, candidateExperienceString)
+
+	fmt.Println(prompt)
+
+	// TODO: experiment with different temperatures
+	resp, err := w.client.GenerateContent(ctx, prompt, 0.9, false)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate content: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 {
+		return "", fmt.Errorf("no response from Gemini")
+	}
+
+	resultText := resp.Text()
+
+	parametersJSON, err := json.Marshal(map[string]interface{}{
+		"job_ids": []int{jobApplication.ID},
+		"fields":  []string{"job_title"},
+	})
+	if err != nil {
+		log.Printf("Failed to marshal parameters: %v", err)
+	}
+
+	// store the result in database
+	workflowRecord := models.Workflow{
+		WorkflowName: "generate_cover_letter",
+		Prompt:       prompt,
+		AgentModel:   w.client.ModelName,
+		Output:       resultText,
+		Parameters:   string(parametersJSON),
+	}
+
+	fmt.Println("\nGenerated Cover Letter:")
+	fmt.Println(resultText)
+
+	// store the result in database
+	workflowID, err := w.db.InsertWorkflow(workflowRecord)
+	if err != nil {
+		log.Printf("Failed to store workflow: %v", err)
+	} else {
+		fmt.Printf("📝 Workflow stored with ID: %d\n", workflowID)
+	}
+	err = w.db.InsertJobApplicationsWorkflow([]int{jobApplication.ID}, workflowID)
+	if err != nil {
+		log.Printf("Failed to store job application workflow: %v", err)
+	}
+
+	err = w.db.AddStepToJobApplication(jobApplication.ID, models.StepInput{
+		Title:       "Generate Cover Letter",
+		Description: fmt.Sprintf("Cover letter generated successfully via workflow %d", workflowID),
+	})
+	if err != nil {
+		log.Printf("Failed to store job application step: %v", err)
+	}
+
+	return resultText, nil
+}

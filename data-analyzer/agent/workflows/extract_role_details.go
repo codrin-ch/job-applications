@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/google/generative-ai-go/genai"
 )
 
 const PROMPT = `
@@ -78,7 +76,7 @@ func (w *ExtractRoleDetailsWorkflow) Execute(ctx context.Context) (Result, error
 
 	prompt := fmt.Sprintf(`%s %s`, PROMPT, jobsBuilder.String())
 
-	resp, err := w.client.Model().GenerateContent(ctx, genai.Text(prompt))
+	resp, err := w.client.GenerateContent(ctx, prompt, 0.1, false)
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to generate content: %w", err)
 	}
@@ -87,13 +85,7 @@ func (w *ExtractRoleDetailsWorkflow) Execute(ctx context.Context) (Result, error
 		return Result{}, fmt.Errorf("no response from Gemini")
 	}
 
-	var resultText string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			resultText += string(text)
-		}
-	}
-
+	resultText := resp.Text()
 	resultText = agent.SanitizeAgentJSONResponse(resultText)
 
 	var result []RoleDetails

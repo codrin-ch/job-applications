@@ -3,6 +3,7 @@ import json
 from django.db import models
 
 STATUS_CHOICES = [
+    ("Preparing Application", "Preparing Application"),
     ("Applied", "Applied"),
     ("Ghosted", "Ghosted"),
     ("Avoid", "Avoid"),
@@ -25,12 +26,15 @@ class JobApplication(models.Model):
     company_url = models.URLField()
     job_description = models.TextField()
     resume_version = models.CharField(max_length=100)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Applied")
+    status = models.CharField(
+        max_length=30, choices=STATUS_CHOICES, default="Preparing Application"
+    )
     source = models.CharField(
         max_length=20, choices=SOURCE_CHOICES, default="Careers Website"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cover_letter = models.TextField(default="", blank=True)
     workflows = models.ManyToManyField(
         "Workflow", related_name="job_applications", blank=True
     )

@@ -5,4 +5,6 @@ type JobApplication struct {
 	ID             int
 	JobTitle       string
 	JobDescription string
+	CompanyName    string
+	CompanyURL     string
 }

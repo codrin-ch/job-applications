@@ -1,5 +1,2 @@
 .DS_Store
 .env
-data-analyzer/agent/workflows/generate_cover_letter.go
-data-analyzer/agent/workflows/research_interview_process.go
-data-analyzer/agent/workflows/research_company.go

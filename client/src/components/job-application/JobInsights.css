@@ -1,0 +1,155 @@
+/* Insights Section Styles */
+.insights-section {
+    margin-top: 15px;
+}
+
+.insights-group {
+    margin-bottom: 20px;
+}
+
+.insights-subtitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.insights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.insights-list-item {
+    position: relative;
+    padding: 10px 15px 10px 30px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    line-height: 1.5;
+    border-left: 3px solid #667eea;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.insights-list-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.insights-list-item::before {
+    content: "✓";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #38ef7d;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.no-insights-msg {
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* Company Research Section Styles */
+.company-research-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #e0e0e0;
+}
+
+.insights-section-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+    display: inline-block;
+}
+
+.insights-list-item.company-research-item {
+    padding-left: 15px;
+}
+
+.insights-list-item.company-research-item::before {
+    content: none;
+}
+
+.research-value {
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.research-example {
+    font-size: 0.85rem;
+    color: #6c757d;
+    line-height: 1.6;
+    padding-left: 12px;
+    border-left: 2px solid #38ef7d;
+    margin-top: 8px;
+}
+
+.example-label {
+    font-weight: 600;
+    color: #38ef7d;
+}
+
+/* Research Action Styles */
+.research-action {
+    margin-top: 15px;
+}
+
+.research-company-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.research-company-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.research-in-progress-msg {
+    color: #667eea;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    margin: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
