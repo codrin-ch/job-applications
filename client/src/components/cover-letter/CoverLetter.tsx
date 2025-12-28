@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Job, type ResearchDataCategoryType, type ResearchData } from '../../types';
 import { ResearchDataCategory } from '../../types';
 import type { WorkExperience as WorkExperienceType, WorkAchievement } from '../work-experience/types';
@@ -39,6 +39,7 @@ type CompanyResearchInsightItem = { key: string; value: string; example: string;
 export const CoverLetter = () => {
     const { job_id } = useParams<{ job_id: string }>();
     const location = useLocation();
+    const navigate = useNavigate();
     // Convert plain object back to Job instance (location.state serializes objects)
     const jobData = location.state?.job;
     const job = jobData ? new Job(jobData) : undefined;
@@ -560,7 +561,7 @@ export const CoverLetter = () => {
 
     return (
         <div className="container">
-            <Link to="/" className="back-link">← Back to Job Applications</Link>
+            <button className="back-link" onClick={() => navigate(-1)}>← Back to Job Applications</button>
             <h2>Prepare Cover Letter</h2>
             {job ? (
                 <div className="cover-letter-content-wrapper">
