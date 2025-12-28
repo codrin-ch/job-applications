@@ -10,7 +10,6 @@ import (
 	"log"
 )
 
-// TODO: improve the prompt as the results are suboptimal at the moment
 const RESEACH_COMPANY_PROMPT = `
 	You are an expert at researching companies and their values and needs.
 	The first priority of the research is the software engineering aspect.

@@ -10,13 +10,6 @@ import (
 	"log"
 )
 
-// Need extra information about the user who applies to match various experinces, stories or skills from previous points
-
-// Need as input the requirements and responsibilites of the job obtained from previous workflow
-
-// Need the company research to find out about the culture, important points, values, etc. from previous workflow (optional at this point)
-
-// Generate cover letter (some guidance is neeed, maximum 250 words, focus on the top 3 responsibilites and requirements of the job that are also found in the user experience)
 const GENERATE_COVER_LETTER_PROMPT = `
 	You are an expert at writing cover letters for Senior Software Engineers.
 	Create a cover letter based on the following information.
@@ -139,37 +132,4 @@ func (w *GenerateCoverLetterWorkflow) Execute(ctx context.Context, jobApplicatio
 	}
 
 	return resultText, nil
-}
-
-var COVER_LETTER_GUIDELINES = []string{
-	// top level structure
-	"The cover letter should have: Introduction, Body Paragraph 1 (Technical Mastery), Body Paragraph 2 (Fit) and Closing.",
-	// Introduction pragraph
-	"The Introduction paragraph must function as a concise executive summary, immediately capturing the reviewer's interest and establishing the applicant's relevance. Example (Senior Backend Engineer): As a seasoned Senior Backend Engineer with over eight years of focused experience designing high-traffic, resilient systems, I was immediately drawn to the challenge outlined in your job posting for enhancing asynchronous processing across your payment pipeline. My proven track record, including successfully leading a database optimization project that reduced system latency by 40% at [Previous Company], directly aligns with your current performance goals.",
-	// body paragraph 1 (Technical Mastery)
-	"The body paragraphs 1 must transition from a general statement of interest to a focused, persuasive argument detailing technical impact. For Senior Backend roles, the content must emphasize deep technical mastery, individual accountability for complex problems, and optimization results.",
-	// body paragraph 2 (Fit)
-	"The body paragraph 2 must explicitly deploy relevant technical vocabulary that validates deep architectural understanding and problem-solving skills.",
-	// closing paragraph
-	"The closing section must move beyond technical competency and address the candidate's specific motivation for joining the organization. Reviewers seek candidates who are genuinely excited about the company's trajectory and mission. The candidate must persuasively explain why this particular job at this specific company is the ideal next step.",
-}
-
-var COVER_LETTER_FORMAT_CHECKLIST = []string{
-	"Is it 300 words of less?",
-	"Are you using an appropriate font size (10-12pt font)?",
-	"Is it grammatically correct and free from spelling errors?",
-	"Are the margins even on all four sides of the page (0.5- 1)?",
-	"Is it organized in a way that's easy to read and follow along?",
-	"Has it been addressed to the appropriate recipient?",
-	"Is it written in the active voice?",
-}
-
-var COVER_LETTER_CONTENT_CHECKLIST = []string{
-	"Did you research the company?",
-	"Is your research reflected in your cover letter?",
-	"Did you use keywords from the job requirements and responsibilities?",
-	"Have you thoughtfully connected your previous experience to the role?",
-	"Have you differentiated your experiences from the way they are listed in your resume?",
-	"Does it include specific experiences to highlight your skills?",
-	"Is it focused on what you can contribute to the company (not what they can do for you)?",
 }
