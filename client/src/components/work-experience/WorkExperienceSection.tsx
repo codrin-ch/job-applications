@@ -110,8 +110,9 @@ export const WorkExperienceSection = ({ experience, onAchievementUpdate, onAchie
 
     // Cleanup timeouts on unmount
     useEffect(() => {
+        const timeouts = saveTimeoutRef.current;
         return () => {
-            Object.values(saveTimeoutRef.current).forEach(timeout => clearTimeout(timeout));
+            Object.values(timeouts).forEach(timeout => clearTimeout(timeout));
         };
     }, []);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Job, type ResearchDataCategoryType, type ResearchData } from '../../types';
 import { ResearchDataCategory } from '../../types';
@@ -42,7 +42,7 @@ export const CoverLetter = () => {
     const navigate = useNavigate();
     // Convert plain object back to Job instance (location.state serializes objects)
     const jobData = location.state?.job;
-    const job = jobData ? new Job(jobData) : undefined;
+    const job = useMemo(() => (jobData ? new Job(jobData) : undefined), [jobData]);
 
     // Ordered research data per category (maintains user ordering)
     const [researchOrder, setResearchOrder] = useState<Record<ResearchDataCategoryType, number[]>>({
