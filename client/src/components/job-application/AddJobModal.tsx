@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getCookie } from '../../utils/csrf';
+import { DEFAULT_RESUME_VERSION, DEFAULT_SOURCE, DEFAULT_STATUS } from '../../constants';
 
 interface AddJobModalProps {
     isOpen: boolean;
@@ -8,8 +9,6 @@ interface AddJobModalProps {
     statusChoices: string[];
 }
 
-const DEFAULT_RESUME_VERSION = 'Chira Codrin LE 051225';
-
 const DEFAULT_NEW_JOB = {
     job_title: '',
     company_name: '',
@@ -17,8 +16,8 @@ const DEFAULT_NEW_JOB = {
     job_description: '',
     resume_version: '',
     salary: '',
-    status: 'Preparing Application',
-    source: 'Careers Website'
+    status: DEFAULT_STATUS,
+    source: DEFAULT_SOURCE
 };
 
 export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJobModalProps) => {
@@ -95,7 +94,7 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
                         const newStatus = e.target.value;
                         const updates: Partial<typeof newJob> = { status: newStatus };
                         // Auto-fill resume version when changing from Preparing Application to Applied
-                        if (newJob.status === 'Preparing Application' && newStatus === 'Applied' && !newJob.resume_version) {
+                        if (newJob.status === DEFAULT_STATUS && newStatus === 'Applied' && !newJob.resume_version) {
                             updates.resume_version = DEFAULT_RESUME_VERSION;
                         }
                         setNewJob({ ...newJob, ...updates });
@@ -108,7 +107,7 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
                     <label style={{ display: 'block', marginBottom: '5px' }}>Source:</label>
                     <select value={newJob.source} onChange={e => setNewJob({ ...newJob, source: e.target.value })}>
                         <option value="LinkedIn">LinkedIn</option>
-                        <option value="Careers Website">Careers Website</option>
+                        <option value={DEFAULT_SOURCE}>{DEFAULT_SOURCE}</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>

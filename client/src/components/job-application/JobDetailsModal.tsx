@@ -5,10 +5,9 @@ import { ReadMore } from './ReadMore';
 import { JobDeepDive } from './JobDeepDive';
 import { JobInsights } from './JobInsights';
 import { getCookie } from '../../utils/csrf';
+import { DEFAULT_RESUME_VERSION } from '../../constants';
 import '../cover-letter/CoverLetter.css';
 import './JobDetailsModal.css';
-
-const DEFAULT_RESUME_VERSION = 'Chira Codrin LE 051225';
 
 
 interface JobDetailsModalProps {
