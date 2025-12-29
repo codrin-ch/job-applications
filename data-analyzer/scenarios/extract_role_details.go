@@ -73,6 +73,15 @@ func (s *ExtractRoleDetailsScenario) Execute(ctx context.Context) ([]workflows.R
 		if err != nil {
 			log.Printf("Failed to store job application workflow: %v", err)
 		}
+		for jobID := range jobIDs {
+			err = s.db.AddStepToJobApplication(jobID, models.StepInput{
+				Title:       "Extract Role Details",
+				Description: fmt.Sprintf("Extracted role details successfully via workflow %d", workflowID),
+			})
+			if err != nil {
+				log.Printf("Failed to store job application step: %v", err)
+			}
+		}
 
 		return result.RoleDetails, nil
 	}
