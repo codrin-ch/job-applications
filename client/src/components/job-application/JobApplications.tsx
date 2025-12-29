@@ -8,6 +8,7 @@ import { JobDetailsModal } from './JobDetailsModal';
 import { AddStepModal } from './AddStepModal';
 import { AddJobModal } from './AddJobModal';
 import { StatusFilter } from './StatusFilter';
+import { GenerateInsightModal } from './GenerateInsightModal';
 
 const DEFAULT_JOB_APPLICATION_STATS: JobApplicationsStats = {
     today_jobs_count: 0,
@@ -34,6 +35,7 @@ export const JobApplications = () => {
     const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
     const [isAddStepModalOpen, setIsAddStepModalOpen] = useState(false);
+    const [isGenerateInsightModalOpen, setIsGenerateInsightModalOpen] = useState(false);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null); // For job details modal
 
     const fetchJobs = () => {
@@ -149,6 +151,7 @@ export const JobApplications = () => {
                 <div className="button-row">
                     <button className="add-job-btn summary-btn" onClick={() => setIsSummaryModalOpen(true)}>Summary</button>
                     <button className="add-job-btn" onClick={() => setIsAddJobModalOpen(true)}>+ Add Job Application</button>
+                    <button className="add-job-btn" onClick={() => setIsGenerateInsightModalOpen(true)}>🔍 Generate Insight</button>
                 </div>
 
                 <div className="table-wrapper">
@@ -233,6 +236,14 @@ export const JobApplications = () => {
                     setJobs(jobs.map(j => j.id === updatedJob.id ? updatedJob : j));
                 }}
                 onAddStep={() => setIsAddStepModalOpen(true)}
+            />
+
+            {/* Generate Insight Modal */}
+            <GenerateInsightModal
+                isOpen={isGenerateInsightModalOpen}
+                onClose={() => setIsGenerateInsightModalOpen(false)}
+                jobs={jobs}
+                onSuccess={fetchJobs}
             />
         </div>
     );
