@@ -8,6 +8,8 @@ import { getCookie } from '../../utils/csrf';
 import '../cover-letter/CoverLetter.css';
 import './JobDetailsModal.css';
 
+const DEFAULT_RESUME_VERSION = 'Chira Codrin LE 051225';
+
 
 interface JobDetailsModalProps {
     job: Job | null;
@@ -122,7 +124,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                                     <span>{job.resume_version || '-'}</span>
                                     <span
                                         className="edit-icon"
-                                        onClick={(e) => { e.stopPropagation(); setIsEditingResumeVersion(true); setResumeVersionValue(job.resume_version || ''); }}
+                                        onClick={(e) => { e.stopPropagation(); setIsEditingResumeVersion(true); setResumeVersionValue(job.resume_version || DEFAULT_RESUME_VERSION); }}
                                         title="Edit resume version"
                                         style={{ marginLeft: '10px' }}
                                     >✏️</span>

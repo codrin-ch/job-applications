@@ -8,6 +8,8 @@ interface AddJobModalProps {
     statusChoices: string[];
 }
 
+const DEFAULT_RESUME_VERSION = 'Chira Codrin LE 051225';
+
 const DEFAULT_NEW_JOB = {
     job_title: '',
     company_name: '',
@@ -21,6 +23,11 @@ const DEFAULT_NEW_JOB = {
 
 export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJobModalProps) => {
     const [newJob, setNewJob] = useState(DEFAULT_NEW_JOB);
+
+    const handleClose = () => {
+        setNewJob(DEFAULT_NEW_JOB);
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -47,9 +54,9 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
     };
 
     return (
-        <div className="modal" style={{ display: 'block' }} onClick={onClose}>
+        <div className="modal" style={{ display: 'block' }} onClick={handleClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <span className="close" onClick={onClose}>&times;</span>
+                <span className="close" onClick={handleClose}>&times;</span>
                 <h3>Add New Job Application</h3>
                 {/* Form fields */}
                 <div style={{ marginBottom: '15px' }}>
@@ -84,7 +91,15 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
 
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Status:</label>
-                    <select value={newJob.status} onChange={e => setNewJob({ ...newJob, status: e.target.value })}>
+                    <select value={newJob.status} onChange={e => {
+                        const newStatus = e.target.value;
+                        const updates: Partial<typeof newJob> = { status: newStatus };
+                        // Auto-fill resume version when changing from Preparing Application to Applied
+                        if (newJob.status === 'Preparing Application' && newStatus === 'Applied' && !newJob.resume_version) {
+                            updates.resume_version = DEFAULT_RESUME_VERSION;
+                        }
+                        setNewJob({ ...newJob, ...updates });
+                    }}>
                         {statusChoices.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
