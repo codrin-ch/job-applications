@@ -83,9 +83,6 @@ export const EditCoverLetter: React.FC = () => {
             }
 
             setSaveSuccess(true);
-            setTimeout(() => {
-                navigate('/');
-            }, 1500);
         } catch (error) {
             setSaveError(error instanceof Error ? error.message : 'An error occurred');
         } finally {
@@ -178,7 +175,7 @@ export const EditCoverLetter: React.FC = () => {
                                     <p className="error-text">{saveError}</p>
                                 )}
                                 {saveSuccess && (
-                                    <p className="success-text">Cover letter saved successfully! Redirecting...</p>
+                                    <p className="success-text">Cover letter saved successfully!</p>
                                 )}
                             </div>
                         </div>
@@ -218,7 +215,7 @@ export const EditCoverLetter: React.FC = () => {
                                 <p className="error-text">{saveError}</p>
                             )}
                             {saveSuccess && (
-                                <p className="success-text">Cover letter saved successfully! Redirecting...</p>
+                                <p className="success-text">Cover letter saved successfully!</p>
                             )}
                         </div>
                     </>

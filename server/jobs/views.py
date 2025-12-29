@@ -63,6 +63,17 @@ def update_job_field(request, job_id):
 
         # Check if the new value is valid
         if new_value in [choice[0] for choice in valid_choices]:
+            # Check for status transition from "Preparing Application" to "Applied"
+            if (
+                field_name == "status"
+                and job.status == "Preparing Application"
+                and new_value == "Applied"
+            ):
+                Step.objects.create(
+                    job_application=job,
+                    title="Applied",
+                    description="Application sent",
+                )
             setattr(job, field_name, new_value)
             job.save()
             return JsonResponse({"success": True})
