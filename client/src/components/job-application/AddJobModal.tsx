@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getCookie } from '../../utils/csrf';
+import { DEFAULT_RESUME_VERSION, DEFAULT_SOURCE, DEFAULT_STATUS } from '../../constants';
 
 interface AddJobModalProps {
     isOpen: boolean;
@@ -15,12 +16,17 @@ const DEFAULT_NEW_JOB = {
     job_description: '',
     resume_version: '',
     salary: '',
-    status: 'Preparing Application',
-    source: 'Careers Website'
+    status: DEFAULT_STATUS,
+    source: DEFAULT_SOURCE
 };
 
 export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJobModalProps) => {
     const [newJob, setNewJob] = useState(DEFAULT_NEW_JOB);
+
+    const handleClose = () => {
+        setNewJob(DEFAULT_NEW_JOB);
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -47,9 +53,9 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
     };
 
     return (
-        <div className="modal" style={{ display: 'block' }} onClick={onClose}>
+        <div className="modal" style={{ display: 'block' }} onClick={handleClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <span className="close" onClick={onClose}>&times;</span>
+                <span className="close" onClick={handleClose}>&times;</span>
                 <h3>Add New Job Application</h3>
                 {/* Form fields */}
                 <div style={{ marginBottom: '15px' }}>
@@ -73,7 +79,7 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Resume Version:</label>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Resume Version (Optional):</label>
                     <input type="text" value={newJob.resume_version} onChange={e => setNewJob({ ...newJob, resume_version: e.target.value })} />
                 </div>
 
@@ -84,7 +90,15 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
 
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Status:</label>
-                    <select value={newJob.status} onChange={e => setNewJob({ ...newJob, status: e.target.value })}>
+                    <select value={newJob.status} onChange={e => {
+                        const newStatus = e.target.value;
+                        const updates: Partial<typeof newJob> = { status: newStatus };
+                        // Auto-fill resume version when changing from Preparing Application to Applied
+                        if (newJob.status === DEFAULT_STATUS && newStatus === 'Applied' && !newJob.resume_version) {
+                            updates.resume_version = DEFAULT_RESUME_VERSION;
+                        }
+                        setNewJob({ ...newJob, ...updates });
+                    }}>
                         {statusChoices.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
@@ -93,7 +107,7 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
                     <label style={{ display: 'block', marginBottom: '5px' }}>Source:</label>
                     <select value={newJob.source} onChange={e => setNewJob({ ...newJob, source: e.target.value })}>
                         <option value="LinkedIn">LinkedIn</option>
-                        <option value="Careers Website">Careers Website</option>
+                        <option value={DEFAULT_SOURCE}>{DEFAULT_SOURCE}</option>
                         <option value="Other">Other</option>
                     </select>
                 </div>

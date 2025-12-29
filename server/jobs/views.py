@@ -52,8 +52,8 @@ def update_job_field(request, job_id):
         new_value = data.get(field_name)
         job = get_object_or_404(JobApplication, pk=job_id)
 
-        # For salary and cover_letter fields, no validation needed (free text)
-        if field_name in ["salary", "cover_letter"]:
+        # For salary, cover_letter, and resume_version fields, no validation needed (free text)
+        if field_name in ["salary", "cover_letter", "resume_version"]:
             setattr(job, field_name, new_value)
             job.save()
             return JsonResponse({"success": True})
@@ -116,16 +116,16 @@ def add_job(request):
         company_name = data.get("company_name")
         company_url = data.get("company_url")
         job_description = data.get("job_description")
-        resume_version = data.get("resume_version")
+        resume_version = data.get("resume_version", "")
         salary = data.get("salary", "")
         status = data.get("status", "Preparing Application")
         source = data.get("source", "Careers Website")
 
         if not all(
-            [job_title, company_name, company_url, job_description, resume_version]
+            [job_title, company_name, company_url, job_description]
         ):
             return JsonResponse(
-                {"success": False, "error": "All fields except salary are required"},
+                {"success": False, "error": "job_title, company_name, company_url, and job_description are required"},
                 status=400,
             )
 
