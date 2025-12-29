@@ -21,6 +21,8 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
     const navigate = useNavigate();
     const [isEditingSalary, setIsEditingSalary] = useState(false);
     const [salaryValue, setSalaryValue] = useState('');
+    const [isEditingResumeVersion, setIsEditingResumeVersion] = useState(false);
+    const [resumeVersionValue, setResumeVersionValue] = useState('');
     const [isCopied, setIsCopied] = useState(false);
 
     const handleCopyCoverLetter = async (text: string) => {
@@ -57,6 +59,28 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
             });
     };
 
+    const handleResumeVersionSave = () => {
+        const csrftoken = getCookie('csrftoken');
+        fetch(`/update_job_field/${job.id}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken || ''
+            },
+            body: JSON.stringify({ resume_version: resumeVersionValue })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const updatedJob = new Job({ ...job, resume_version: resumeVersionValue });
+                    onJobUpdate(updatedJob);
+                    setIsEditingResumeVersion(false);
+                } else {
+                    alert("Failed to update resume version");
+                }
+            });
+    };
+
     const getStatusClass = (status: string) => {
         return `status-${status.toLowerCase().replace(' ', '-')}`;
     };
@@ -80,7 +104,31 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, isOpen, o
                     </div>
                     <div className="detail-item">
                         <div className="detail-label">Resume Version</div>
-                        <div className="detail-value">{job.resume_version}</div>
+                        <div className="detail-value editable-field">
+                            {isEditingResumeVersion ? (
+                                <div className="edit-actions" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                        type="text"
+                                        className="salary-input"
+                                        value={resumeVersionValue}
+                                        onChange={(e) => setResumeVersionValue(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button className="edit-btn save-btn" onClick={handleResumeVersionSave}>✓</button>
+                                    <button className="edit-btn cancel-btn" onClick={() => { setIsEditingResumeVersion(false); setResumeVersionValue(job.resume_version || ''); }}>✗</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <span>{job.resume_version || '-'}</span>
+                                    <span
+                                        className="edit-icon"
+                                        onClick={(e) => { e.stopPropagation(); setIsEditingResumeVersion(true); setResumeVersionValue(job.resume_version || ''); }}
+                                        title="Edit resume version"
+                                        style={{ marginLeft: '10px' }}
+                                    >✏️</span>
+                                </>
+                            )}
+                        </div>
                     </div>
                     <div className="detail-item">
                         <div className="detail-label">Salary</div>

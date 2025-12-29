@@ -25,7 +25,7 @@ class JobApplication(models.Model):
     company_name = models.CharField(max_length=100)
     company_url = models.URLField()
     job_description = models.TextField()
-    resume_version = models.CharField(max_length=100)
+    resume_version = models.CharField(max_length=100, default="", blank=True)
     status = models.CharField(
         max_length=30, choices=STATUS_CHOICES, default="Preparing Application"
     )

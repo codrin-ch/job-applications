@@ -73,7 +73,7 @@ export const AddJobModal = ({ isOpen, onClose, onJobAdded, statusChoices }: AddJ
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Resume Version:</label>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Resume Version (Optional):</label>
                     <input type="text" value={newJob.resume_version} onChange={e => setNewJob({ ...newJob, resume_version: e.target.value })} />
                 </div>
 
